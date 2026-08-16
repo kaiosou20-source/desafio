@@ -1,15 +1,28 @@
 # A Anomalia de Baixa Volatilidade e a Estratégia *Betting Against Beta* (BAB) no Mercado Acionário Brasileiro: Uma Análise Técnica e Empírica no Universo IBrX-100 (2018–2026)
 
 **Desafio Quant AI 2026**  
-**Autor / Equipe:** Kaio dos Anjos Souza  
+**Autoria:** Candidato Anônimo — Equipe de Engenharia Quantitativa  
 **Data de Conclusão:** Agosto de 2026  
 **Estratégia Quantitativa:** Robô Jonathan (*Systematic Low Volatility Strategy*)
 
 ---
 
-## 🏛️ Apresentação Institucional do Robô Jonathan
+## 🏛️ Apresentação Institucional do Robô Jonathan e Filosofia Operacional
 
-Abaixo detalham-se os parâmetros operacionais, diretrizes de investimento e capacidade de absorção de capital da estratégia automatizada:
+### A Origem do Nome e o Arquétipo da Tartaruga Quant
+
+O **Robô Jonathan** foi batizado em homenagem direta a **Jonathan**, a lendária tartaruga-gigante-de-seychelles residente na ilha de Santa Helena, reconhecida oficialmente pelo *Guinness World Records* como o animal terrestre vivo mais velho do planeta (nascido por volta de 1832). Com mais de 190 anos de idade, Jonathan sobreviveu a quase dois séculos de transformações geopolíticas, atravessou duas Grandes Guerras Mundiais, a Grande Depressão de 1929, a hiperinflação brasileira dos anos 80/90, a Crise do Subprime de 2008 e o Crash Global da Covid-19 em 2020. A longevidade extraordinária de Jonathan não decorre de velocidade ou impulsividade, mas de sua capacidade biológica inabalável de resistir a choques externos, conservar energia e manter consistência vital ao longo do tempo.
+
+No contexto das finanças quantitativas, essa trajetória personifica a clássica **Fábula da Tartaruga e da Lebre** aplicada ao mercado de capitais:
+- **A Lebre (Q5, Alta Volatilidade):** Representa investidores e ativos especulativos que apresentam acelerações explosivas e efêmeras em ciclos de euforia (bull markets de liquidez abundante), mas sofrem rebaixamentos patrimoniais catastróficos (-60% a -80%) durante as reversões de ciclo, destruindo a base de capital e inviabilizando o poder dos juros compostos no longo prazo.
+- **O Robô Jonathan (Q1, Baixa Volatilidade):** Atua com o seu **"casco matemático"** — uma carteira sistemática composta estritamente pelas ações de menor volatilidade histórica do IBrX-100. Seu objetivo primário não é vencer o mercado nos momentos de euforia irracional, mas sim **proteger o capital contra quedas profundas em períodos de pânico**. Ao amortecer o rebaixamento máximo, a estratégia inicia cada novo ciclo de alta a partir de um patamar patrimonial substancialmente mais elevado, permitindo que a taxa de juros compostos atue continuamente a seu favor.
+
+> *"Não corro riscos desnecessários; acumulo o tempo a meu favor. Consistência hoje, preservação sempre."*  
+> — **Lema Operacional do Robô Jonathan**
+
+---
+
+### Especificação Técnica do Mandato Operacional
 
 | Atributo Operacional | Especificação Técnica do Robô Jonathan |
 |:---|:---|
@@ -17,12 +30,12 @@ Abaixo detalham-se os parâmetros operacionais, diretrizes de investimento e cap
 | **Mandato & Filosofia** | *Factor Investing Defensivo / Systematic Equity Long-Only (com módulo alternativo Long-Short)* |
 | **Universo Investível** | Ações componentes do índice **IBrX-100 da B3** (reconstituído corte a corte / *point-in-time*) |
 | **Fator Alfa Primário** | Anomalia de Baixa Volatilidade (*Betting Against Beta / Low Volatility Anomaly*) |
-| **Sinal de Ordenação** | Volatilidade Histórica Anualizada dos Retornos Diários ($\sigma_{\text{ann}}$) |
-| **Janela de Lookback Principal** | **252 dias úteis (12 meses)** — maior estabilidade e menor *turnover* |
-| **Seleção e Concentração** | **Quintil $Q_1$ Defensivo** (Top 20% de menor volatilidade, correspondendo a ~20 ativos) |
-| **Esquema de Ponderação** | Equiponderado (*Equal-Weighted* - EW), com $w_i = 1/M_{Q_1} \approx 5,0\%$ por ativo |
-| **Periodicidade de Rebalanceamento** | **Trimestral** (alinhada às janelas de rebalanceamento da B3) |
-| **Taxa de Fricção Aplicada** | **5 bps por perna negociada** (custo de corretagem + emolumentos institucionais) |
+| **Sinal de Ordenação** | Volatilidade Histórica Anualizada dos Retornos Diários (σ_anual) |
+| **Janela de Lookback Principal** | **252 dias úteis (12 meses)** — maximiza a estabilidade e minimiza o *turnover* |
+| **Seleção e Concentração** | **Quintil Q1 Defensivo** (Top 20% de menor volatilidade, correspondendo a ~20 ativos) |
+| **Esquema de Ponderação** | Equiponderado (*Equal-Weighted* - EW), com w_i = 1 / M_Q1 ≈ 5,0% por ativo |
+| **Periodicidade de Rebalanceamento** | **Trimestral** (alinhada às janelas de recomposição de índices da B3) |
+| **Taxa de Fricção Aplicada** | **5 bps por perna negociada** (custo institucional de corretagem + emolumentos) |
 | **Capacidade de Absorção (PL Máximo)** | **R$ 250 a R$ 400 Milhões**, respeitando o limite prudencial de liquidez de **5% do VMDN30** |
 | **Hurdle Rate & Réguas Comparativas** | **Taxa CDI Diária** (Alpha de Jensen) e **Ibovespa / IBrX-100** (Beta e Retorno de Mercado) |
 
@@ -30,21 +43,21 @@ Abaixo detalham-se os parâmetros operacionais, diretrizes de investimento e cap
 
 ## 1) Resumo Executivo
 
-O *Capital Asset Pricing Model* (CAPM) tradicional postula uma relação linear positiva entre o risco sistemático ($\beta$) de um ativo e seu retorno esperado, fundamentando a premissa de que investidores exigem prêmios de risco superiores para suportar maior volatilidade (Sharpe, 1964; Lintner, 1965). Contudo, evidências empíricas acumuladas nas últimas cinco décadas nos mercados globais e emergentes demonstram sistematicamente a falha dessa relação teórica (Black, Jensen & Scholes, 1972; Baker, Bradley & Wurgler, 2011). A **Anomalia de Baixa Volatilidade** (*Low Volatility Anomaly*) descreve o fenômeno no qual carteiras compostas por ações de baixo risco histórico (menor volatilidade ou menor beta) alcançam retornos absolutos e ajustados ao risco superiores àqueles previstos pela teoria financeira clássica, enquanto ativos de alto risco apresentam retornos substancialmente inferiores.
+O *Capital Asset Pricing Model* (CAPM) tradicional postula uma relação linear positiva entre o risco sistemático (β) de um ativo e seu retorno esperado, fundamentando a premissa de que investidores exigem prêmios de risco superiores para suportar maior volatilidade (Sharpe, 1964; Lintner, 1965). Contudo, evidências empíricas acumuladas nas últimas cinco décadas nos mercados globais e emergentes demonstram sistematicamente a falha dessa relação teórica (Black, Jensen & Scholes, 1972; Baker, Bradley & Wurgler, 2011). A **Anomalia de Baixa Volatilidade** (*Low Volatility Anomaly*) descreve o fenômeno no qual carteiras compostas por ações de baixo risco histórico (menor volatilidade ou menor beta) alcançam retornos absolutos e ajustados ao risco superiores àqueles previstos pela teoria financeira clássica, enquanto ativos de alto risco apresentam retornos substancialmente inferiores.
 
 Este relatório técnico investiga a presença, a persistência e a rentabilidade da Anomalia de Baixa Volatilidade e da estratégia *Betting Against Beta* (BAB) no mercado acionário brasileiro, cobrindo o período histórico de **janeiro de 2018 a agosto de 2026** (2.120 pregões analisados). A análise avalia o universo de ativos do índice **IBrX-100 da B3** por meio de reconstituições históricas corte a corte (*point-in-time*), eliminando com rigor o viés de sobrevivência (*survivorship bias*) e o viés de antecipação (*look-ahead bias*).
 
 São comparados dois regimes operacionais distintos:
-1. **Regime Long-Only ($Q_1$, Robô Jonathan):** Portfólio 100% alocado no quintil de menor volatilidade histórica ($Q_1$);
-2. **Regime Long-Short Autofinanciado ($Q_1 - Q_5 + \text{CDI}$):** Posição comprada no quintil defensivo ($Q_1$) e vendida no quintil de maior volatilidade ($Q_5$, *A Lebre*), com o caixa e garantias remunerados a 100% da taxa CDI.
+1. **Regime Long-Only (Q1, Robô Jonathan):** Portfólio 100% alocado no quintil de menor volatilidade histórica (Q1);
+2. **Regime Long-Short Autofinanciado (Q1 - Q5 + CDI):** Posição comprada no quintil defensivo (Q1) e vendida no quintil de maior volatilidade (Q5, *A Lebre*), com o caixa e garantias remunerados a 100% da taxa CDI.
 
-A precificação e a resiliência dos alfas são testadas sob diferentes janelas de estimativa do sinal de volatilidade histórica ($T \in \{63, 126, 252\}$ dias úteis) e submetidas a cenários progressivos de custos de transação e atritos operacionais ($0$, $5$ e $15$ pontos base por perna negociada).
+A precificação e a resiliência dos alfas são testadas sob diferentes janelas de estimativa do sinal de volatilidade histórica (T ∈ {63, 126, 252} dias úteis) e submetidas a cenários progressivos de custos de transação e atritos operacionais (0, 5 e 15 pontos base por perna negociada).
 
-Os resultados empíricos comprovam que a **estratégia Long-Only ($Q_1$)** com lookback de 252 dias úteis atuou como um **substituto superior de beta acionário**:
+Os resultados empíricos comprovam que a **estratégia Long-Only (Q1)** com lookback de 252 dias úteis atuou como um **substituto superior de beta acionário**:
 - Entregou um retorno anualizado (**CAGR**) de **13,85% a.a.** contra **9,41% a.a.** do Ibovespa e **9,19% a.a.** do CDI;
 - Registrou volatilidade de **17,77% a.a.** (vs. 23,23% do Ibovespa), alcançando um **Índice de Sharpe de 0,26** perante o CDI (frente a 0,01 do Ibovespa);
 - Gerou um **Alpha de Jensen Anualizado de +4,59% a.a.** com **Beta sistemático de 0,67**;
-- A **redução expressiva do Rebaixamento Máximo (*Max Drawdown*) para -34,78% (vs. -46,82% do Ibovespa)** pertence **exclusivamente ao regime Long-Only**. Em contrapartida, o regime **Long-Short** registrou Max Drawdown severo de **-60,13%**, decorrente do risco de *short squeeze* e da elevada convexidade da ponta vendida ($Q_5$) durante ciclos de forte recuperação do mercado acionário.
+- A **redução expressiva do Rebaixamento Máximo (*Max Drawdown*) para -34,78% (vs. -46,82% do Ibovespa)** pertence **exclusivamente ao regime Long-Only**. Em contrapartida, o regime **Long-Short** registrou Max Drawdown severo de **-60,13%**, decorrente do risco de *short squeeze* e da elevada convexidade da ponta vendida (Q5) durante ciclos de forte recuperação do mercado acionário.
 
 Os resultados fornecem subsídios quantitativos robustos para a estruturação de mandatos de *Factor Investing* institucional no Brasil.
 
@@ -56,7 +69,7 @@ Os resultados fornecem subsídios quantitativos robustos para a estruturação d
 
 A base conceitual da precificação de ativos repousa sobre a formulação de média-variância desenvolvida por Sharpe (1964) e Lintner (1965), na qual o retorno esperado de um ativo é uma função estritamente linear de sua covariância com a carteira de mercado:
 
-$$E[R_i] = R_f + \beta_i \left(E[R_m] - R_f\right)$$
+$$E[R_i] = R_f + \beta_i \times ( E[R_m] - R_f )$$
 
 O estudo empírico seminal de Black, Jensen e Scholes (1972) refutou essa proposição para o mercado acionário norte-americano, demonstrando que a inclinação empírica da reta de mercado de títulos (*Security Market Line* - SML) é substancialmente mais plana do que a prevista pelo CAPM. Os autores constataram que ativos com baixo beta registravam alfas de Jensen positivos e persistentes, ao passo que ações de alto beta apresentavam alfas sistematicamente negativos. Essa constatação levou Black (1972) a formalizar o *Zero-Beta CAPM*, demonstrando que, na ausência de empréstimos ilimitados à taxa livre de risco, o prêmio por unidade de beta é inferior ao retorno excedente da carteira de mercado.
 
@@ -84,47 +97,47 @@ Para assegurar o rigor acadêmico, o universo investível é reconstituído em c
 
 ### 3.2. Sinal de Volatilidade Histórica e Estimativa de Parâmetros
 
-O sinal de ordenação quantitativa dos ativos é determinado pela volatilidade histórica dos retornos diários. Para cada ação *i* pertencente ao universo elegível do IBrX-100 no dia de rebalanceamento *t*, a volatilidade anualizada $\sigma_{i,t}$ é calculada via desvio padrão amostral dos retornos logarítmicos:
+O sinal de ordenação quantitativa dos ativos é determinado pela volatilidade histórica dos retornos diários. Para cada ação *i* pertencente ao universo elegível do IBrX-100 no dia de rebalanceamento *t*, a volatilidade anualizada σ_i,t é calculada via desvio padrão amostral dos retornos logarítmicos:
 
-$$\sigma_{i,t} = \sqrt{\frac{252}{N-1} \sum_{k=0}^{N-1} \left( R_{i, t-k} - \bar{R}_{i,t} \right)^2 }$$
+$$\sigma_{i,t} = \sqrt{\frac{252}{N - 1} \sum_{k=0}^{N-1} ( R_{i, t-k} - \bar{R}_{i,t} )^2 }$$
 
 Onde:
-- $R_{i, t-k} = \ln\left( \frac{P_{i, t-k}}{P_{i, t-k-1}} \right)$ é o retorno diário da ação *i*;
-- $\bar{R}_{i,t} = \frac{1}{N} \sum_{k=0}^{N-1} R_{i, t-k}$ representa a média aritmética dos retornos no período de observação;
-- $N \in \{63, 126, 252\}$ corresponde às janelas de lookback analisadas, equivalentes a 3 meses, 6 meses e 1 ano útil, respectivamente.
+- R_{i, t-k} = ln( P_{i, t-k} / P_{i, t-k-1} ) é o retorno diário da ação *i*;
+- R̄_{i,t} = ( 1 / N ) × Σ_{k=0..N-1} R_{i, t-k} representa a média aritmética dos retornos no período de observação;
+- N ∈ {63, 126, 252} corresponde às janelas de lookback analisadas, equivalentes a 3 meses, 6 meses e 1 ano útil, respectivamente.
 
-Para as análises do fator, o beta histórico $\beta_{i,t}$ do ativo em relação ao índice de mercado ($R_m$, Ibovespa) é estimado por:
+Para as análises do fator, o beta histórico β_i,t do ativo em relação ao índice de mercado (R_m, Ibovespa) é estimado por:
 
-$$\beta_{i,t} = \hat{\rho}_{i,m} \frac{\sigma_{i,t}}{\sigma_{m,t}}$$
+$$\beta_{i,t} = \hat{\rho}_{i,m} \times \left( \frac{\sigma_{i,t}}{\sigma_{m,t}} \right)$$
 
-onde $\hat{\rho}_{i,m}$ é a correlação linear de Pearson entre os retornos do ativo e do índice de mercado calculada na mesma janela $N$.
+onde ρ̂_{i,m} é a correlação linear de Pearson entre os retornos do ativo e do índice de mercado calculada na mesma janela N.
 
 ### 3.3. Construção da Carteira Equiponderada (*Equal-Weighted*)
 
-A cada rebalanceamento, os ativos do universo elegível com histórico válido suficiente (mínimo de 70% dos pregões da janela) são ordenados de forma crescente com base na métrica de volatilidade histórica $\sigma_{i,t}$ e divididos em cinco quintis ($Q_1, Q_2, Q_3, Q_4, Q_5$). O quintil $Q_1$ (*Robô Jonathan*) engloba as ações de menor volatilidade (*Low Volatility*), enquanto o quintil $Q_5$ (*A Lebre*) reúne as ações de maior volatilidade (*High Volatility*).
+A cada rebalanceamento, os ativos do universo elegível com histórico válido suficiente (mínimo de 70% dos pregões da janela) são ordenados de forma crescente com base na métrica de volatilidade histórica σ_i,t e divididos em cinco quintis (Q1, Q2, Q3, Q4, Q5). O quintil Q1 (*Robô Jonathan*) engloba as ações de menor volatilidade (*Low Volatility*), enquanto o quintil Q5 (*A Lebre*) reúne as ações de maior volatilidade (*High Volatility*).
 
 As carteiras dentro de cada quintil são estruturadas sob o esquema equiponderado (*Equal-Weighted* - EW), atribuindo peso idêntico a cada ativo integrante:
 
 $$w_{i,t} = \frac{1}{M_q}$$
 
-onde $M_q$ é o número total de ativos contidos no quintil $q$ ($M_q \approx 20$ ações na partição padrão de 20%). A adoção da equiponderação impede que a alocação seja dominada por poucas megacaps, garantindo que o retorno reflita o efeito puro do fator de volatilidade sem distorções advindas da ponderação por valor de mercado.
+onde M_q é o número total de ativos contidos no quintil q (M_q ≈ 20 ações na partição padrão de 20%). A adoção da equiponderação impede que a alocação seja dominada por poucas megacaps, garantindo que o retorno reflita o efeito puro do fator de volatilidade sem distorções advindas da ponderação por valor de mercado.
 
 ### 3.4. Regimes Estratégicos e Formalização Modelar
 
 Dois regimes de alocação são testados contra os benchmarks de mercado:
 
-1. **Regime Long-Only Defensivo ($Q_1$, Robô Jonathan):** O portfólio mantém exposição comprada de 100% no quintil de menor volatilidade ($Q_1$). O retorno diário da estratégia é expresso por:
+1. **Regime Long-Only Defensivo (Q1, Robô Jonathan):** O portfólio mantém exposição comprada de 100% no quintil de menor volatilidade (Q1). O retorno diário da estratégia é expresso por:
 
-$$R_{\text{LO},t} = \sum_{i \in Q_1} w_{i,t} R_{i,t}$$
+$$R_{\text{LO},t} = \sum_{i \in Q_1} w_{i,t} \times R_{i,t}$$
 
-2. **Regime Long-Short Autofinanciado ($Q_1 - Q_5 + \text{CDI}$):** 
+2. **Regime Long-Short Autofinanciado (Q1 - Q5 + CDI):** 
 
 > [!IMPORTANT]
-> **Esclarecimento Metodológico sobre o Modelo Long-Short:**
-> A implementação testada no âmbito deste projeto é formalmente definida como um **Spread Equiponderado de Quintis de Volatilidade ($Q_1 - Q_5 + \text{CDI}$)** com caixa colateralizado a 100% do CDI, e **não** o fator BAB clássico com alavancagem dinâmica ex-ante ($\beta=1$) proposto por Frazzini & Pedersen (2014).  
-> A escolha da modelagem autofinanciada não-alavancada justifica-se por dois fatores práticos mandatórios no mercado brasileiro:
-> 1. **Custo de Carregamento da Alavancagem:** Com a taxa Selic/CDI entre 10% e 14% a.a., alavancar a carteira de baixo beta para beta unitário exigiria um custo de financiamento de margem proibitivo que destruiria o spread líquido;
-> 2. **Restrições Regulatórias CVM:** As regras da CVM para Fundos de Investimento em Ações abertos (Instrução CVM 555 / Resolução CVM 175) vedam a exposição alavancada desmedida sem limites estritos de garantia, tornando a estrutura $Q_1 - Q_5 + \text{CDI}$ o veículo institucional viável para fundos multimercado/ações locais.
+> **Esclarecimento Metodológico sobre o Modelo Long-Short:**  
+> A implementação testada no âmbito deste projeto é formalmente definida como um **Spread Equiponderado de Quintis de Volatilidade (Q1 - Q5 + CDI)** com caixa colateralizado a 100% do CDI, e **não** o fator BAB clássico com alavancagem dinâmica ex-ante (β = 1) proposto por Frazzini & Pedersen (2014).  
+> A escolha da modelagem autofinanciada não-alavancada justifica-se por dois fatores práticos mandatórios no mercado brasileiro:  
+> 1. **Custo de Carregamento da Alavancagem:** Com a taxa Selic/CDI entre 10% e 14% a.a., alavancar a carteira de baixo beta para beta unitário exigiria um custo de financiamento de margem proibitivo que destruiria o spread líquido;  
+> 2. **Restrições Regulatórias CVM:** As regras da CVM para Fundos de Investimento em Ações abertos (Instrução CVM 555 / Resolução CVM 175) vedam a exposição alavancada desmedida sem limites estritos de garantia, tornando a estrutura Q1 - Q5 + CDI o veículo institucional viável para fundos multimercado/ações locais.
 
 O retorno diário do modelo Long-Short é formulado como:
 
@@ -168,17 +181,17 @@ O desempenho quantitativo das estratégias é avaliado através das seguintes m�
 ### CAGR (*Compound Annual Growth Rate*)
 Mede a taxa de retorno geométrico anualizado acumulado pela estratégia ao longo do período do backtest:
 
-$$\text{CAGR} = \left( \frac{V_T}{V_0} \right)^{\frac{252}{T_d}} - 1$$
+$$\text{CAGR} = ( V_T / V_0 )^{\frac{252}{T_d}} - 1$$
 
-### Volatilidade Anualizada ($\sigma_{\text{ann}}$)
+### Volatilidade Anualizada (σ_anual)
 Mede a dispersão dos retornos diários do portfólio parametrizada para a escala anual:
 
-$$\sigma_{\text{ann}} = \sqrt{252} \times \sqrt{\frac{1}{T_d - 1} \sum_{t=1}^{T_d} \left( R_{p,t} - \bar{R}_p \right)^2}$$
+$$\sigma_{\text{anual}} = \sqrt{252} \times \sqrt{\frac{1}{T_d - 1} \sum_{t=1}^{T_d} ( R_{p,t} - \bar{R}_p )^2 }$$
 
-### Índice de Sharpe ($\text{SR}$)
-Mede o retorno excedente por unidade de risco total assumido, tomando a taxa CDI como a taxa livre de risco livre de inadimplência ($R_f$):
+### Índice de Sharpe (SR)
+Mede o retorno excedente por unidade de risco total assumido, tomando a taxa CDI como a taxa livre de risco livre de inadimplência (R_f):
 
-$$\text{Sharpe} = \frac{\text{CAGR} - \text{CDI}_{\text{ann}}}{\sigma_{\text{ann}}}$$
+$$\text{Sharpe} = \frac{\text{CAGR} - \text{CDI}_{\text{anual}}}{\sigma_{\text{anual}}}$$
 
 ### Max Drawdown (Rebaixamento Máximo)
 Mede a maior queda percentual pico-a-vale no valor patrimonial da carteira antes da recuperação de um novo topo histórico:
@@ -188,12 +201,15 @@ $$\text{Max DD} = \max_{t \in [0,T]} \left( \frac{\max_{\tau \le t} V_\tau - V_t
 ### Win Rate (Taxa de Acerto Periódica)
 Mede o percentual de janelas de rebalanceamento em que a estratégia superou o benchmark de referência (Ibovespa para o regime Long-Only e taxa CDI para o regime Long-Short).
 
-### Alpha de Jensen Anualizado ($\alpha$) vs. CDI e Ibovespa
+### Alpha de Jensen Anualizado (α) vs. CDI e Ibovespa
 O Alfa de Jensen quantifica a geração de retorno excedente ajustado ao risco sistemático de mercado através da regressão linear dos retornos diários:
 
-$$R_{p,t} - R_{\text{CDI},t} = \alpha + \beta_m \left( R_{m,t} - R_{\text{CDI},t} \right) + \epsilon_t$$
+$$R_{p,t} - R_{\text{CDI},t} = \alpha + \beta_m \times ( R_{m,t} - R_{\text{CDI},t} ) + \epsilon_t$$
 
-O valor estimado do alfa diário é anualizado via $\alpha_{\text{ann}} = (1 + \alpha)^{252} - 1$.
+O valor estimado do alfa diário é anualizado via:
+
+$$\alpha_{\text{anual}} = (1 + \alpha)^{252} - 1$$
+
 
 ---
 
@@ -285,10 +301,10 @@ Síntese visual institucional das métricas quantitativas de retorno, dispersão
 Uma limitação operacional crítica para a implementação do regime Long-Short no Brasil é o custo de tomada de empréstimo de ações (*borrowing fee/rate*) no mercado de BTC da B3. As ações componentes do quintil de maior volatilidade ($Q_5$) frequentemente correspondem a empresas de menor qualidade fundamentalista (*distressed assets*, empresas em recuperação ou altamente endividadas), com elevada percepção de risco e forte concentração de posições vendidas por fundos *equity hedge*.
 
 > [!WARNING]
-> **Simulação Quantitativa do Impacto do BTC:**
-> - Taxa média histórica de BTC para papéis do quintil $Q_5$ no Brasil: **3,0% a 4,5% a.a.** (média conservadora de **3,5% a.a.**);
-> - Como a perna vendida representa 100% do PL alocado, o custo direto de empréstimo reduz o retorno anualizado do Long-Short de **13,47% a.a. para ~9,97% a.a.**;
-> - O **Alpha anualizado líquido sobre o CDI cai de +4,35% a.a. para apenas ~+0,85% a.a.**, tornando a relação risco-retorno do Long-Short desvantajosa quando ponderada pela volatilidade de 26,56% e pelo risco de *recall* de ações alugadas;
+> **Simulação Quantitativa do Impacto do BTC:**  
+> - Taxa média histórica de BTC para papéis do quintil $Q_5$ no Brasil: **3,0% a 4,5% a.a.** (média conservadora de **3,5% a.a.**);  
+> - Como a perna vendida representa 100% do PL alocado, o custo direto de empréstimo reduz o retorno anualizado do Long-Short de **13,47% a.a. para ~9,97% a.a.**;  
+> - O **Alpha anualizado líquido sobre o CDI cai de +4,35% a.a. para apenas ~+0,85% a.a.**, tornando a relação risco-retorno do Long-Short desvantajosa quando ponderada pela volatilidade de 26,56% e pelo risco de *recall* de ações alugadas;  
 > - Este cálculo reforça a tese de que o **regime Long-Only ($Q_1$)** — isento de taxas de BTC e com retorno líquido de **13,85% a.a.** e Alpha de **+4,59% a.a.** — é o veículo de alocação institucional ideal.
 
 ### 7.2. Assimetria na Tributação das Estratégias
@@ -328,7 +344,7 @@ Em estrito cumprimento às diretrizes do edital do Desafio Quant AI 2026, docume
    - **Aplicação Prática:** Processamento da crítica formal da banca avaliadora, formalização da modelagem de Volatility Spread ($Q_1 - Q_5 + \text{CDI}$), inclusão do cálculo de impacto quantitativo de BTC (3,5% a.a.), restrição da tese de drawdown ao regime Long-Only e estruturação do quadro institucional do Robô Jonathan.
 5. **Etapa 5 — Pipeline Reprodutível de Geração Automatizada do PDF (`gerar_pdf.py`):**
    - **Ferramenta:** *Antigravity Document Automation Engine*.
-   - **Aplicação Prática:** Criação do script em Python (`gerar_pdf.py`) baseado em ReportLab/Markdown para compilação automatizada, estruturação de capa, paginação, sumário dinâmico e renderização de tabelas e figuras em formato executivo de submissão.
+   - **Aplicação Prática:** Criação do script em Python (`gerar_pdf.py`) baseado em ReportLab/Markdown para compilação automatizada, estruturação de capa anônima, paginação, sumário dinâmico e renderização de tabelas e figuras em formato executivo de submissão.
 
 *Nota de Governança e Integridade Científica:* Toda a modelagem matemática, séries temporais, matrizes de covariância e métricas de desempenho foram calculadas e auditadas deterministicamente pelo código Python nesta pasta, assegurando 100% de reproducibilidade e rigor científico.
 

@@ -2,17 +2,17 @@
 ===============================================================================
 GERADOR DE RELATÓRIO FINAL EM PDF (gerar_pdf.py)
 Projeto: Desafio Quant AI 2026 - Anomalia de Baixa Volatilidade (Low Vol)
-Autor: Kaio dos Anjos Souza
+Autoria: Candidato Anônimo — Equipe de Engenharia Quantitativa
 Mascote: Robô Jonathan (Tartaruga Quant)
 ===============================================================================
 Compila 'relatorio_final.pdf' a partir de 'relatorio.md' com padrão executivo:
-- Capa institucional completa (Título, Mascote robo.png, Autoria, Data).
-- Sumário executivo com descrições das seções.
+- Anonimato absoluto (capa, cabeçalhos, rodapés e metadados).
+- Lore completa da tartaruga Jonathan e fundamentação conceitual de Low Vol.
 - Tipografia em Helvetica com hierarquia clara e espaçamentos equilibrados.
 - Formatação matemática e renderização de equações em cartões destacados.
 - Tabelas com colunas proporcionais, cabeçalhos destacados e linhas zebradas.
-- Figuras em 300 DPI centralizadas e com legendas institucionais.
-- Cabeçalhos e rodapés com numeração dinâmica de páginas ('Página X de Y').
+- Figuras em 300 DPI centralizadas e com quebra de página dedicada (sem órfãs).
+- Cabeçalhos e rodapés anônimos com numeração dinâmica ('Página X de Y').
 ===============================================================================
 """
 
@@ -50,7 +50,7 @@ C_MUTED = colors.HexColor("#6C757D")         # Cinza Médio
 
 
 class NumberedCanvas(canvas.Canvas):
-    """Canvas de dois passos para contagem e renderização dinâmica do total de páginas."""
+    """Canvas de dois passos para contagem e renderização dinâmica do total de páginas com estrito anonimato."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._saved_page_states = []
@@ -76,18 +76,18 @@ class NumberedCanvas(canvas.Canvas):
         self.setFont("Helvetica", 8)
         self.setFillColor(C_MUTED)
 
-        # Cabeçalho Superior
+        # Cabeçalho Superior Anônimo
         self.drawString(2.0 * cm, 28.5 * cm, "Desafio Quant AI 2026 — Robô Jonathan (Low Volatility Anomaly)")
-        self.drawRightString(19.0 * cm, 28.5 * cm, "Relatório Técnico Final")
+        self.drawRightString(19.0 * cm, 28.5 * cm, "Relatório Técnico Final de Submissão")
         self.setStrokeColor(C_GOLD)
         self.setLineWidth(0.75)
         self.line(2.0 * cm, 28.3 * cm, 19.0 * cm, 28.3 * cm)
 
-        # Rodapé Inferior
+        # Rodapé Inferior Anônimo
         self.setStrokeColor(C_BORDER)
         self.setLineWidth(0.5)
         self.line(2.0 * cm, 1.8 * cm, 19.0 * cm, 1.8 * cm)
-        self.drawString(2.0 * cm, 1.4 * cm, "Autor: Kaio dos Anjos Souza | Universo IBrX-100 (2018–2026)")
+        self.drawString(2.0 * cm, 1.4 * cm, "Autoria: Candidato Anônimo | Universo IBrX-100 (2018–2026)")
         self.drawRightString(19.0 * cm, 1.4 * cm, f"Página {self._pageNumber} de {page_count}")
         self.restoreState()
 
@@ -99,8 +99,8 @@ def criar_estilos():
     styles.add(ParagraphStyle(
         name='CapaTitulo',
         fontName='Helvetica-Bold',
-        fontSize=18.5,
-        leading=23.5,
+        fontSize=18.0,
+        leading=23.0,
         textColor=C_PRIMARY,
         alignment=1, # Centralizado
         spaceAfter=10
@@ -109,18 +109,18 @@ def criar_estilos():
     styles.add(ParagraphStyle(
         name='CapaSubtitulo',
         fontName='Helvetica',
-        fontSize=11.5,
-        leading=15.5,
+        fontSize=11.0,
+        leading=15.0,
         textColor=C_GOLD,
         alignment=1,
-        spaceAfter=20
+        spaceAfter=18
     ))
 
     styles.add(ParagraphStyle(
         name='CapaAutor',
         fontName='Helvetica-Bold',
-        fontSize=10.5,
-        leading=14.5,
+        fontSize=10.0,
+        leading=14.0,
         textColor=C_SECONDARY,
         alignment=1
     ))
@@ -128,8 +128,8 @@ def criar_estilos():
     styles.add(ParagraphStyle(
         name='CapaData',
         fontName='Helvetica',
-        fontSize=9.5,
-        leading=13.5,
+        fontSize=9.0,
+        leading=13.0,
         textColor=C_MUTED,
         alignment=1
     ))
@@ -137,8 +137,8 @@ def criar_estilos():
     styles.add(ParagraphStyle(
         name='SecaoTitulo',
         fontName='Helvetica-Bold',
-        fontSize=12.5,
-        leading=16.5,
+        fontSize=12.0,
+        leading=16.0,
         textColor=C_PRIMARY,
         spaceBefore=14,
         spaceAfter=5,
@@ -148,8 +148,8 @@ def criar_estilos():
     styles.add(ParagraphStyle(
         name='SubSecaoTitulo',
         fontName='Helvetica-Bold',
-        fontSize=10.2,
-        leading=14.0,
+        fontSize=10.0,
+        leading=13.5,
         textColor=C_GOLD,
         spaceBefore=9,
         spaceAfter=3,
@@ -159,21 +159,21 @@ def criar_estilos():
     styles.add(ParagraphStyle(
         name='TextoCorpo',
         fontName='Helvetica',
-        fontSize=8.8,
-        leading=12.6,
+        fontSize=8.6,
+        leading=12.4,
         textColor=C_TEXT,
         alignment=4, # Justificado
-        spaceAfter=6
+        spaceAfter=5.5
     ))
 
     styles.add(ParagraphStyle(
         name='TextoDestaque',
         fontName='Helvetica-Oblique',
-        fontSize=8.5,
-        leading=12.0,
+        fontSize=8.4,
+        leading=11.8,
         textColor=C_SECONDARY,
         spaceBefore=3,
-        spaceAfter=5
+        spaceAfter=4.5
     ))
 
     styles.add(ParagraphStyle(
@@ -183,8 +183,8 @@ def criar_estilos():
         leading=13.0,
         textColor=C_PRIMARY,
         alignment=1, # Centralizado
-        spaceBefore=3,
-        spaceAfter=3
+        spaceBefore=2,
+        spaceAfter=2
     ))
 
     styles.add(ParagraphStyle(
@@ -195,23 +195,23 @@ def criar_estilos():
         textColor=C_SECONDARY,
         alignment=1, # Centralizado
         spaceBefore=3,
-        spaceAfter=10
+        spaceAfter=8
     ))
 
     styles.add(ParagraphStyle(
         name='AlertaTexto',
         fontName='Helvetica',
-        fontSize=8.4,
-        leading=11.8,
+        fontSize=8.2,
+        leading=11.5,
         textColor=C_PRIMARY,
-        spaceAfter=3
+        spaceAfter=2
     ))
 
     styles.add(ParagraphStyle(
         name='TabelaCabecalho',
         fontName='Helvetica-Bold',
-        fontSize=7.2,
-        leading=9.0,
+        fontSize=7.0,
+        leading=8.8,
         textColor=colors.white,
         alignment=1
     ))
@@ -219,8 +219,8 @@ def criar_estilos():
     styles.add(ParagraphStyle(
         name='TabelaCelula',
         fontName='Helvetica',
-        fontSize=6.8,
-        leading=8.6,
+        fontSize=6.6,
+        leading=8.4,
         textColor=C_TEXT,
         alignment=1
     ))
@@ -228,8 +228,8 @@ def criar_estilos():
     styles.add(ParagraphStyle(
         name='TabelaCelulaBold',
         fontName='Helvetica-Bold',
-        fontSize=6.8,
-        leading=8.6,
+        fontSize=6.6,
+        leading=8.4,
         textColor=C_PRIMARY,
         alignment=1
     ))
@@ -237,8 +237,8 @@ def criar_estilos():
     styles.add(ParagraphStyle(
         name='TabelaInstitucionalKey',
         fontName='Helvetica-Bold',
-        fontSize=8.2,
-        leading=10.5,
+        fontSize=8.0,
+        leading=10.2,
         textColor=C_SECONDARY,
         alignment=0 # Alinhado à esquerda
     ))
@@ -246,8 +246,8 @@ def criar_estilos():
     styles.add(ParagraphStyle(
         name='TabelaInstitucionalVal',
         fontName='Helvetica',
-        fontSize=8.0,
-        leading=10.5,
+        fontSize=7.8,
+        leading=10.2,
         textColor=C_TEXT,
         alignment=0
     ))
@@ -255,8 +255,8 @@ def criar_estilos():
     styles.add(ParagraphStyle(
         name='SumarioItem',
         fontName='Helvetica-Bold',
-        fontSize=9.5,
-        leading=13.5,
+        fontSize=9.0,
+        leading=13.0,
         textColor=C_PRIMARY,
         spaceAfter=3
     ))
@@ -264,10 +264,10 @@ def criar_estilos():
     styles.add(ParagraphStyle(
         name='ReferenciaItem',
         fontName='Helvetica',
-        fontSize=8.0,
-        leading=11.2,
+        fontSize=7.8,
+        leading=10.8,
         textColor=C_TEXT,
-        spaceAfter=4
+        spaceAfter=3.5
     ))
 
     return styles
@@ -276,16 +276,45 @@ def criar_estilos():
 def formatar_formula_html(raw_latex: str) -> str:
     """Converte comandos LaTeX matemáticos em notação HTML limpa."""
     txt = raw_latex.strip()
+    
+    # Substituições de frações e raízes
+    txt = txt.replace(r"\frac{252}{N - 1}", "( 252 / (N - 1) )")
+    txt = txt.replace(r"\frac{252}{N-1}", "( 252 / (N - 1) )")
+    txt = txt.replace(r"\frac{1}{N}", "( 1 / N )")
+    txt = txt.replace(r"\frac{1}{M_q}", "1 / M<sub>q</sub>")
+    txt = txt.replace(r"\frac{1}{T_d - 1}", "( 1 / (T<sub>d</sub> - 1) )")
+    txt = txt.replace(r"\frac{V_T}{V_0}", "( V<sub>T</sub> / V<sub>0</sub> )")
+    txt = txt.replace(r"\frac{252}{T_d}", "( 252 / T<sub>d</sub> )")
+    txt = txt.replace(r"\frac{\sigma_{i,t}}{\sigma_{m,t}}", "(&sigma;<sub>i,t</sub> / &sigma;<sub>m,t</sub>)")
+    txt = txt.replace(r"\frac{\text{CAGR} - \text{CDI}_{\text{anual}}}{\sigma_{\text{anual}}}", "( CAGR - CDI<sub>anual</sub> ) / &sigma;<sub>anual</sub>")
+    txt = txt.replace(r"\frac{\text{CAGR} - \text{CDI}_{\text{ann}}}{\sigma_{\text{ann}}}", "( CAGR - CDI<sub>anual</sub> ) / &sigma;<sub>anual</sub>")
+    txt = txt.replace(r"\frac{\max_{\tau \le t} V_\tau - V_t}{\max_{\tau \le t} V_\tau}", "[ max<sub>&tau; &le; t</sub> V<sub>&tau;</sub> - V<sub>t</sub> ] / max<sub>&tau; &le; t</sub> V<sub>&tau;</sub>")
+    
+    # Símbolos Gregos e Variáveis
     txt = txt.replace(r"\sigma_{i,t}", "&sigma;<sub>i,t</sub>")
+    txt = txt.replace(r"\sigma_{\text{anual}}", "&sigma;<sub>anual</sub>")
     txt = txt.replace(r"\sigma_{\text{ann}}", "&sigma;<sub>anual</sub>")
     txt = txt.replace(r"\sigma_{m,t}", "&sigma;<sub>m,t</sub>")
-    txt = txt.replace(r"\beta_i", "&beta;<sub>i</sub>")
+    txt = txt.replace(r"\sigma", "&sigma;")
     txt = txt.replace(r"\beta_{i,t}", "&beta;<sub>i,t</sub>")
+    txt = txt.replace(r"\beta_i", "&beta;<sub>i</sub>")
     txt = txt.replace(r"\beta_m", "&beta;<sub>m</sub>")
+    txt = txt.replace(r"\beta", "&beta;")
     txt = txt.replace(r"\hat{\rho}_{i,m}", "&rho;&#770;<sub>i,m</sub>")
+    txt = txt.replace(r"\alpha_{\text{anual}}", "&alpha;<sub>anual</sub>")
     txt = txt.replace(r"\alpha_{\text{ann}}", "&alpha;<sub>anual</sub>")
     txt = txt.replace(r"\alpha", "&alpha;")
     txt = txt.replace(r"\epsilon_t", "&epsilon;<sub>t</sub>")
+    txt = txt.replace(r"\tau", "&tau;")
+    
+    # Somatórios e Raízes
+    txt = txt.replace(r"\sum_{i \in Q_1}", "&Sigma;<sub>i &isin; Q1</sub>")
+    txt = txt.replace(r"\sum_{k=0}^{N-1}", "&Sigma;<sub>k=0..N-1</sub>")
+    txt = txt.replace(r"\sum_{t=1}^{T_d}", "&Sigma;<sub>t=1..T</sub>")
+    txt = txt.replace(r"\sum_i", "&Sigma;<sub>i</sub>")
+    txt = txt.replace(r"\sqrt{", "&radic;[ ")
+    
+    # Notações de Retorno e Pesos
     txt = txt.replace(r"E[R_i]", "<b>E[R<sub>i</sub>]</b>")
     txt = txt.replace(r"R_f", "R<sub>f</sub>")
     txt = txt.replace(r"E[R_m]", "E[R<sub>m</sub>]")
@@ -294,37 +323,37 @@ def formatar_formula_html(raw_latex: str) -> str:
     txt = txt.replace(r"\bar{R}_p", "R&#773;<sub>p</sub>")
     txt = txt.replace(r"R_{p,t}", "R<sub>p,t</sub>")
     txt = txt.replace(r"R_{\text{CDI},t}", "R<sub>CDI,t</sub>")
+    txt = txt.replace(r"R_{CDI,t}", "R<sub>CDI,t</sub>")
     txt = txt.replace(r"R_{m,t}", "R<sub>m,t</sub>")
     txt = txt.replace(r"R_{\text{LO},t}", "R<sub>LO,t</sub>")
     txt = txt.replace(r"R_{\text{LS},t}", "R<sub>LS,t</sub>")
     txt = txt.replace(r"R_{Q_1,t}", "R<sub>Q1,t</sub>")
     txt = txt.replace(r"R_{Q_5,t}", "R<sub>Q5,t</sub>")
-    txt = txt.replace(r"w_{i,t}", "w<sub>i,t</sub>")
     txt = txt.replace(r"w_{i,t^+}", "w<sub>i,t<sup>+</sup></sub>")
     txt = txt.replace(r"w_{i,t^-}", "w<sub>i,t<sup>-</sup></sub>")
+    txt = txt.replace(r"w_{i,t}", "w<sub>i,t</sub>")
+    txt = txt.replace(r"w_i", "w<sub>i</sub>")
     txt = txt.replace(r"M_{Q_1}", "M<sub>Q1</sub>")
     txt = txt.replace(r"M_q", "M<sub>q</sub>")
-    txt = txt.replace(r"\sum_{i \in Q_1}", "&Sigma;<sub>i &isin; Q1</sub>")
-    txt = txt.replace(r"\sum_{k=0}^{N-1}", "&Sigma;<sub>k=0..N-1</sub>")
-    txt = txt.replace(r"\sum_i", "&Sigma;<sub>i</sub>")
-    txt = txt.replace(r"\sum_{t=1}^{T_d}", "&Sigma;<sub>t=1..T</sub>")
-    txt = txt.replace(r"\sqrt{", "&radic;[")
-    txt = txt.replace(r"\frac{252}{N-1}", "(252 / (N - 1)) &times; ")
-    txt = txt.replace(r"\frac{1}{N}", "(1 / N) &times; ")
-    txt = txt.replace(r"\frac{1}{M_q}", "1 / M<sub>q</sub>")
-    txt = txt.replace(r"\frac{1}{T_d - 1}", "(1 / (T<sub>d</sub> - 1)) &times; ")
-    txt = txt.replace(r"\frac{V_T}{V_0}", "(V<sub>T</sub> / V<sub>0</sub>)")
-    txt = txt.replace(r"\frac{\text{CAGR} - \text{CDI}_{\text{ann}}}{\sigma_{\text{ann}}}", "(CAGR - CDI<sub>anual</sub>) / &sigma;<sub>anual</sub>")
-    txt = txt.replace(r"\ln\left( \frac{P_{i, t-k}}{P_{i, t-k-1}} \right)", "ln(P<sub>i, t-k</sub> / P<sub>i, t-k-1</sub>)")
+    
+    # Limpeza de Operadores
+    txt = txt.replace(r"\ln(", "ln(")
+    txt = txt.replace(r"\ln\left(", "ln(")
     txt = txt.replace(r"\left(", "(").replace(r"\right)", ")")
     txt = txt.replace(r"\left[", "[").replace(r"\right]", "]")
     txt = txt.replace(r"\text{Custo}_t", "Custo<sub>t</sub>")
     txt = txt.replace(r"\text{CAGR}", "CAGR")
     txt = txt.replace(r"\text{Sharpe}", "Índice de Sharpe")
     txt = txt.replace(r"\text{Max DD}", "Max Drawdown")
+    txt = txt.replace(r"\text{CDI}", "CDI")
+    txt = txt.replace(r"\max_{t \in [0,T]}", "max<sub>t &isin; [0,T]</sub>")
+    txt = txt.replace(r"\max_{\tau \le t}", "max<sub>&tau; &le; t</sub>")
     txt = txt.replace(r"\times", "&times;")
     txt = txt.replace(r"\le", "&le;").replace(r"\approx", "&asymp;")
-    txt = txt.replace("}", "]") if "&radic;[" in txt else txt.replace("}", "")
+    txt = txt.replace(r"^2", "<sup>2</sup>")
+    txt = txt.replace(r"}", "]") if "&radic;[" in txt else txt.replace("}", "")
+    txt = txt.replace("{", "")
+    
     return txt
 
 
@@ -336,13 +365,16 @@ def formatar_inline_latex(texto: str) -> str:
     t = t.replace("$Q_2$", "<i>Q</i><sub>2</sub>")
     t = t.replace("$Q_3$", "<i>Q</i><sub>3</sub>")
     t = t.replace("$Q_4$", "<i>Q</i><sub>4</sub>")
-    t = t.replace("$Q_q$", "<i>Q</i><sub>q</sub>")
+    t = t.replace("Q1", "<i>Q</i><sub>1</sub>")
+    t = t.replace("Q5", "<i>Q</i><sub>5</sub>")
     t = t.replace(r"$\beta$", "&beta;")
     t = t.replace(r"$\beta_i$", "&beta;<sub>i</sub>")
     t = t.replace(r"$\beta_m$", "&beta;<sub>m</sub>")
     t = t.replace(r"$\alpha$", "&alpha;")
+    t = t.replace(r"$\alpha_{\text{anual}}$", "&alpha;<sub>anual</sub>")
     t = t.replace(r"$\sigma_{i,t}$", "&sigma;<sub>i,t</sub>")
     t = t.replace(r"$\sigma_{\text{ann}}$", "&sigma;<sub>anual</sub>")
+    t = t.replace(r"$\sigma_{\text{anual}}$", "&sigma;<sub>anual</sub>")
     t = t.replace(r"$\sigma_{m,t}$", "&sigma;<sub>m,t</sub>")
     t = t.replace(r"$T \in \{63, 126, 252\}$", "<i>T</i> &isin; {63, 126, 252}")
     t = t.replace(r"$N \in \{63, 126, 252\}$", "<i>N</i> &isin; {63, 126, 252}")
@@ -366,11 +398,15 @@ def formatar_inline_latex(texto: str) -> str:
     t = t.replace(r"$M_q \approx 20$", "<i>M</i><sub>q</sub> &asymp; 20")
     t = t.replace(r"$M_q$", "<i>M</i><sub>q</sub>")
     t = t.replace(r"$T$", "<i>T</i>").replace(r"$c$", "<i>c</i>").replace(r"$N$", "<i>N</i>")
+    t = t.replace("(β)", "(&beta;)").replace("(α)", "(&alpha;)")
+    t = t.replace("β = 0,67", "&beta; = 0,67").replace("β ≈ -0,66", "&beta; &asymp; -0,66")
+    t = t.replace("σ_anual", "&sigma;<sub>anual</sub>")
+    t = t.replace("w_i", "<i>w</i><sub>i</sub>")
     return t
 
 
 def gerar_elementos_capa(styles):
-    """Monta a capa institucional com imagem do mascote."""
+    """Monta a capa institucional com imagem do mascote e estrito anonimato."""
     elementos = []
     elementos.append(Spacer(1, 1.2 * cm))
 
@@ -398,7 +434,7 @@ def gerar_elementos_capa(styles):
     elementos.append(Spacer(1, 0.15 * cm))
     elementos.append(Paragraph("<b>Estratégia:</b> Robô Jonathan (<i>Low Volatility Quant Strategy</i>)", styles['CapaAutor']))
     elementos.append(Spacer(1, 0.15 * cm))
-    elementos.append(Paragraph("<b>Autor / Desenvolvedor:</b> Kaio dos Anjos Souza", styles['CapaAutor']))
+    elementos.append(Paragraph("<b>Autoria:</b> Candidato Anônimo (Equipe de Engenharia Quantitativa)", styles['CapaAutor']))
     elementos.append(Spacer(1, 0.15 * cm))
     elementos.append(Paragraph("Agosto de 2026", styles['CapaData']))
 
@@ -413,7 +449,7 @@ def gerar_elementos_sumario(styles):
     elementos.append(HRFlowable(width="100%", thickness=1.0, color=C_GOLD, spaceAfter=14, spaceBefore=2))
 
     itens_sumario = [
-        ("🏛️ Apresentação Institucional do Robô Jonathan", "Diretrizes de investimento, mandato e capacidade de alocação"),
+        ("🏛️ Apresentação Institucional do Robô Jonathan", "Lore da tartaruga, mandato quantitativo e capacidade de alocação"),
         ("1. Resumo Executivo", "Fundamentos da anomalia e síntese de resultados empíricos"),
         ("2. Hipótese e Fundamentação Teórica", "Falha do CAPM, restrições de alavancagem e efeito da Selic/CDI"),
         ("3. Metodologia de Pesquisa", "Reconstituição corte a corte, sinais de volatilidade e regimes Long-Only/Long-Short"),
@@ -436,7 +472,7 @@ def gerar_elementos_sumario(styles):
 
 
 def converter_markdown_para_pdf(styles):
-    """Processa relatorio.md e constrói a sequência de Flowables com formatação rigorosa."""
+    """Processa relatorio.md e constrói a sequência de Flowables com diagramação elegante."""
     elementos = []
 
     if not os.path.exists(ARQUIVO_MD):
@@ -462,7 +498,7 @@ def converter_markdown_para_pdf(styles):
             continue
 
         # Ignora cabeçalhos duplicados da capa
-        if linha.startswith("# A Anomalia de Baixa Volatilidade") or linha.startswith("**Desafio Quant AI 2026**") or linha.startswith("**Autor / Equipe:**") or linha.startswith("**Data de Conclusão:**") or linha.startswith("**Estratégia Quantitativa:**"):
+        if linha.startswith("# A Anomalia de Baixa Volatilidade") or linha.startswith("**Desafio Quant AI 2026**") or linha.startswith("**Autoria:**") or linha.startswith("**Data de Conclusão:**") or linha.startswith("**Estratégia Quantitativa:**"):
             i += 1
             continue
 
@@ -484,8 +520,38 @@ def converter_markdown_para_pdf(styles):
             continue
 
         # Título H4 (ex: #### Figura 1: ...)
-        if linha.startswith("#### "):
+        if linha.startswith("#### Figura ") or linha.startswith("#### "):
             texto_h4 = linha.replace("#### ", "").strip()
+            # Se for uma figura na Seção 6, vamos agrupar com a imagem subsequente
+            if "Figura " in texto_h4:
+                # Procura a imagem correspondente nas próximas linhas
+                i_img = i + 1
+                img_path = None
+                img_caption = texto_h4
+                while i_img < total_linhas and not linhas[i_img].strip().startswith("####") and not linhas[i_img].strip().startswith("##"):
+                    if linhas[i_img].strip().startswith("!["):
+                        match_img = re.search(r'!\[(.*?)\]\((.*?)\)', linhas[i_img].strip())
+                        if match_img:
+                            img_path = match_img.group(2)
+                            img_caption = match_img.group(1)
+                            break
+                    i_img += 1
+
+                if img_path:
+                    caminho_abs = os.path.join(BASE_DIR, img_path.replace("/", os.sep))
+                    if os.path.exists(caminho_abs):
+                        elementos.append(PageBreak()) # Quebra de página limpa para cada figura
+                        elementos.append(Paragraph(formatar_inline_latex(texto_h4), styles['SubSecaoTitulo']))
+                        elementos.append(Spacer(1, 0.15 * cm))
+                        img_flow = Image(caminho_abs, width=16.5 * cm, height=8.25 * cm)
+                        img_flow.hAlign = 'CENTER'
+                        elementos.append(img_flow)
+                        elementos.append(Spacer(1, 0.1 * cm))
+                        elementos.append(Paragraph(f"<b>{img_caption}</b>", styles['LegendaFigura']))
+                        elementos.append(Spacer(1, 0.2 * cm))
+                        i = i_img + 1
+                        continue
+
             elementos.append(Spacer(1, 0.12 * cm))
             elementos.append(Paragraph(formatar_inline_latex(texto_h4), styles['SubSecaoTitulo']))
             i += 1
@@ -531,7 +597,7 @@ def converter_markdown_para_pdf(styles):
             elementos.append(Spacer(1, 0.15 * cm))
             continue
 
-        # Inserção de Imagens (![Legenda](caminho))
+        # Inserção de Imagens avulsas (![Legenda](caminho))
         if linha.startswith("!["):
             match_img = re.search(r'!\[(.*?)\]\((.*?)\)', linha)
             if match_img:
@@ -541,7 +607,7 @@ def converter_markdown_para_pdf(styles):
 
                 if os.path.exists(caminho_abs):
                     elementos.append(Spacer(1, 0.15 * cm))
-                    img_flow = Image(caminho_abs, width=16.8 * cm, height=8.4 * cm)
+                    img_flow = Image(caminho_abs, width=16.5 * cm, height=8.25 * cm)
                     img_flow.hAlign = 'CENTER'
                     elementos.append(KeepTogether([
                         img_flow,
@@ -584,7 +650,6 @@ def converter_markdown_para_pdf(styles):
             elementos.append(KeepTogether([t_form]))
             elementos.append(Spacer(1, 0.1 * cm))
             continue
-
 
         # Tabelas Markdown (| col1 | col2 | ...)
         if linha.startswith("|"):
@@ -706,7 +771,7 @@ def converter_markdown_para_pdf(styles):
         texto_p = formatar_inline_latex(texto_p)
         
         # Estilo de Referência Bibliográfica na seção 9
-        if linha.startswith("- **") and "Journal" in linha or "Revista" in linha or "Finance" in linha:
+        if linha.startswith("- **") and ("Journal" in linha or "Revista" in linha or "Finance" in linha or "Press" in linha or "Praeger" in linha):
             elementos.append(Paragraph(texto_p.replace("- ", ""), styles['ReferenciaItem']))
         else:
             elementos.append(Paragraph(texto_p, styles['TextoCorpo']))
@@ -718,7 +783,7 @@ def converter_markdown_para_pdf(styles):
 def compilar_pdf():
     """Gera o documento PDF executivo final."""
     print("=" * 80)
-    print("INICIANDO COMPILACAO DO RELATORIO FINAL (relatorio_final.pdf)...")
+    print("INICIANDO COMPILACAO DO RELATORIO FINAL ANONIMO (relatorio_final.pdf)...")
     print("=" * 80)
 
     doc = SimpleDocTemplate(

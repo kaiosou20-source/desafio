@@ -1,0 +1,30 @@
+# Ambiente Virtual
+.venv/
+env/
+venv/
+ENV/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Dados temporários de cache gerados (se desejar versionar apenas o CSV histórico)
+data/cotacoes_cache.parquet
+data/cdi_cache.csv
+data/benchmark_cache.csv
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Arquivos de sistema
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Streamlit
+.streamlit/

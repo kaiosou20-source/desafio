@@ -93,13 +93,30 @@ Para rodar a simulação padrão e exportar todos os gráficos em `reports/`:
 python main.py
 ```
 
-### Passo 4: Iniciar o Dashboard Interativo (Streamlit)
+### Passo 4: Gerar Figuras de Publicação em 300 DPI (`figuras/`)
 
-Para abrir a interface visual no seu navegador:
+Para gerar as 5 figuras em altíssima definição (300 DPI) para o relatório institucional:
+
+```powershell
+python figuras.py
+```
+
+### Passo 5: Gerar o Relatório Final em PDF de Submissão (`relatorio_final.pdf`)
+
+Para compilar e gerar o PDF final de submissão do desafio com capa, sumário executivo, figuras e tabelas formatadas:
+
+```powershell
+python gerar_pdf.py
+```
+
+### Passo 6: Iniciar o Dashboard Interativo Multi-páginas (Streamlit)
+
+Para abrir a interface visual no seu navegador (incluindo a página principal e o laboratório de experimentos):
 
 ```powershell
 streamlit run dashboard.py
 ```
+
 
 ---
 

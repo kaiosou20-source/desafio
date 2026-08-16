@@ -170,19 +170,21 @@ def executar_backtest(
         
         # Filtra estritamente a janela histórica até o dia de rebalanceamento d_reb
         pos_reb = datas_comuns.get_loc(d_reb)
-        idx_lookback = datas_comuns[pos_reb - lookback_dias + 1 : pos_reb + 1]
+        start_pos = max(0, pos_reb - lk_int + 1)
+        idx_lookback = datas_comuns[start_pos : pos_reb + 1]
         
         retornos_janela = retornos_ativos.loc[idx_lookback]
         bench_janela = retornos_bench.loc[idx_lookback]
         
-        # Forma os quintis
+        # Forma os quintis com tratamento defensivo
         carteiras_quintis = formar_carteiras_quintis(
             retornos_historicos=retornos_janela,
             retornos_benchmark=bench_janela,
             tickers_elegiveis=tickers_elegiveis,
-            lookback=lookback_dias,
-            fracao_quintil=fracao_quintil
+            lookback=lk_int,
+            fracao_quintil=frac_float
         )
+
         
         # Período de sustentação da carteira: do dia seguinte a d_reb até d_prox
         idx_periodo = datas_simulacao[(datas_simulacao > d_reb) & (datas_simulacao <= d_prox)]

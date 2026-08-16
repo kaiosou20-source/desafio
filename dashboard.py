@@ -1,9 +1,10 @@
 """
 ===============================================================================
 DASHBOARD INTERATIVO QUANTITATIVO (dashboard.py)
-Projeto: Desafio Quant AI 2026 - Tese 2 (Anomalia de Baixa Volatilidade)
+Projeto: Desafio Quant AI 2026 - Anomalia de Baixa Volatilidade (Low Volatility Anomaly)
 Mascote: Jonathan, o Robô-Tartaruga Quant (Q1) vs. A Lebre (Q5)
 ===============================================================================
+
 Aplicação Streamlit com tema escuro personalizado (#1F3B2C, #B08D4C, #D9D9D9):
 - Header com o Mascote Oficial Jonathan e storytelling do Desafio Quant AI 2026.
 - Controles interativos na barra lateral (lookback, rebalanceamento, custos, datas).
@@ -158,8 +159,8 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown("""
-    **🐢 Tese 2: Betting Against Beta**
-    *Empiricamente, ativos de menor volatilidade proporcionam retornos superiores ajustados ao risco, desafiando a premissa clássica do CAPM.*
+    **Anomalia de Baixa Volatilidade (Low Volatility Anomaly)**
+    *Betting Against Beta — Empiricamente, ativos de menor volatilidade entregam retornos superiores ajustados ao risco no longo prazo, desafiando a premissa clássica da relação risco-retorno do CAPM.*
     """)
 
 
@@ -205,12 +206,13 @@ with col_masc:
         st.image("assets/jonathan.png", use_container_width=True)
 
 with col_title:
-    st.markdown("<div class='badge-quant'>TESE 2: ANOMALIA DE BAIXA VOLATILIDADE</div>", unsafe_allow_html=True)
+    st.markdown("<div class='badge-quant'>ANOMALIA DE BAIXA VOLATILIDADE (LOW VOLATILITY ANOMALY)</div>", unsafe_allow_html=True)
     st.title("🐢 Jonathan (Low Vol) vs. 🐇 A Lebre (High Vol)")
     st.markdown("""
     **Metáfora Central:** *Jonathan, a tartaruga de quase dois séculos, sobreviveu a guerras e crises não por ser veloz, mas por nunca correr riscos desnecessários.
     No mercado acionário brasileiro (IBrX-100), o controle estrito de drawdowns e a consistência superam a volatilidade e compõem capital superior no longo prazo.*
     """)
+
 
 st.markdown("---")
 

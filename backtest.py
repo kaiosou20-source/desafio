@@ -31,9 +31,8 @@ if sys.stdout.encoding != 'utf-8':
 
 import numpy as np
 import pandas as pd
-from datetime import datetime
-from typing import Dict, List, Tuple, Optional
-
+from typing import Dict, List, Tuple, Optional, Union
+from datetime import datetime, date
 
 from dados import (
     carregar_composicao_ibrx,
@@ -48,21 +47,22 @@ from estrategia import formar_carteiras_quintis
 
 
 def executar_backtest(
-    data_inicio: str = "2017-01-01",
-    data_fim: str = "2026-08-01",
+
+    data_inicio: Union[str, datetime, date, pd.Timestamp] = "2018-01-01",
+    data_fim: Union[str, datetime, date, pd.Timestamp] = "2026-08-01",
     lookback_dias: int = 252,
     frequencia_rebalanceamento: str = "trimestral",
     fracao_quintil: float = 0.20,
     custo_transacao_bps: float = 5.0,
     modo_estrategia: str = "long_only",
-    caminho_composicao: str = "data/ibrx_composicao_historica.csv"
+    caminho_composicao: Optional[str] = None
 ) -> Dict:
     """
     Executa a simulação temporal quantitativa ponta a ponta da estratégia.
     
     Parâmetros:
-        data_inicio: Data inicial da simulação (YYYY-MM-DD).
-        data_fim: Data final da simulação (YYYY-MM-DD).
+        data_inicio: Data inicial da simulação (YYYY-MM-DD ou datetime/date).
+        data_fim: Data final da simulação (YYYY-MM-DD ou datetime/date).
         lookback_dias: Janela móvel de cálculo de volatilidade (126 = 6 meses, 252 = 12 meses).
         frequencia_rebalanceamento: 'trimestral', 'mensal', 'semestral' ou 'anual'.
         fracao_quintil: Proporção de cada quintil (0.20 = 20%).
@@ -73,25 +73,41 @@ def executar_backtest(
     Retorna:
         Dict com curvas de capital, retornos diários, métricas comparativas e histórico de rebalanceamentos.
     """
-    modo_label = "Long-Short (Q1 Long / Q5 Short + CDI)" if modo_estrategia == "long_short" else "Long-Only (Q1 Low Vol)"
+    # 0. Normalização e Validação Robusta de Parâmetros
+    if hasattr(data_inicio, 'strftime'):
+        d_ini_str = data_inicio.strftime("%Y-%m-%d")
+    else:
+        d_ini_str = str(data_inicio).strip()
+
+    if hasattr(data_fim, 'strftime'):
+        d_fim_str = data_fim.strftime("%Y-%m-%d")
+    else:
+        d_fim_str = str(data_fim).strip()
+
+    lk_int = int(lookback_dias)
+    freq_str = str(frequencia_rebalanceamento).strip().lower()
+    frac_float = float(fracao_quintil)
+    custo_float = float(custo_transacao_bps)
+    modo_str = str(modo_estrategia).strip().lower()
+
+    modo_label = "Long-Short (Q1 Long / Q5 Short + CDI)" if modo_str == "long_short" else "Long-Only (Q1 Low Vol)"
     print("=" * 80)
     print(f"🐢 MOTOR DE BACKTEST QUANTITATIVO: JONATHAN ({modo_label})")
-    print(f"   Período: {data_inicio} até {data_fim} | Lookback: {lookback_dias} pregões")
-    print(f"   Rebalanceamento: {frequencia_rebalanceamento.capitalize()} | Custos: {custo_transacao_bps} bps")
+    print(f"   Período: {d_ini_str} até {d_fim_str} | Lookback: {lk_int} pregões")
+    print(f"   Rebalanceamento: {freq_str.capitalize()} | Custos: {custo_float} bps")
     print("=" * 80)
-
 
     # 1. Carrega Universo Histórico
     df_composicao = carregar_composicao_ibrx(caminho_composicao)
     todos_tickers = df_composicao['ticker'].unique().tolist()
     
     # Para garantir lookback suficiente no primeiro rebalanceamento, baixamos dados com antecedência
-    dt_inicio_coleta = (pd.to_datetime(data_inicio) - pd.Timedelta(days=lookback_dias * 2)).strftime("%Y-%m-%d")
+    dt_inicio_coleta = (pd.to_datetime(d_ini_str) - pd.Timedelta(days=lk_int * 2)).strftime("%Y-%m-%d")
     
     # 2. Ingestão de Cotações, Benchmark e CDI
-    precos_ativos = baixar_cotacoes_ativos(todos_tickers, data_inicio=dt_inicio_coleta, data_fim=data_fim)
-    serie_bench_precos = baixar_benchmark(ticker="^BVSP", data_inicio=dt_inicio_coleta, data_fim=data_fim)
-    serie_cdi_diario = baixar_cdi_bcb(data_inicio=dt_inicio_coleta, data_fim=data_fim)
+    precos_ativos = baixar_cotacoes_ativos(todos_tickers, data_inicio=dt_inicio_coleta, data_fim=d_fim_str)
+    serie_bench_precos = baixar_benchmark(ticker="^BVSP", data_inicio=dt_inicio_coleta, data_fim=d_fim_str)
+    serie_cdi_diario = baixar_cdi_bcb(data_inicio=dt_inicio_coleta, data_fim=d_fim_str)
     
     # 3. Calcula Retornos Diários
     retornos_ativos = calcular_retornos_diarios(precos_ativos)
@@ -104,15 +120,16 @@ def executar_backtest(
     serie_cdi_diario = serie_cdi_diario.reindex(datas_comuns).fillna(0.0)
     
     # 4. Determina as Datas de Rebalanceamento
-    datas_reb_todas = obter_datas_rebalanceamento(datas_comuns, frequencia=frequencia_rebalanceamento)
+    datas_reb_todas = obter_datas_rebalanceamento(datas_comuns, frequencia=freq_str)
     
     # Filtra as datas de rebalanceamento que possuem lookback suficiente e ocorrem no período desejado
-    dt_inicio_dt = pd.to_datetime(data_inicio)
+    dt_inicio_dt = pd.to_datetime(d_ini_str)
     datas_reb_validas = []
     for d in datas_reb_todas:
         pos = datas_comuns.get_loc(d)
-        if pos >= lookback_dias and d >= dt_inicio_dt:
+        if pos >= lk_int and d >= dt_inicio_dt:
             datas_reb_validas.append(d)
+
             
     if len(datas_reb_validas) < 2:
         # Se a primeira data de rebalanceamento for posterior, inclui a data inicial com lookback disponível

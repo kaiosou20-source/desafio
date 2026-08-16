@@ -198,27 +198,43 @@ with st.sidebar:
 # ==============================================================================
 # EXECUÇÃO DO BACKTEST (COM CACHE STREAMLIT)
 # ==============================================================================
-@st.cache_data(show_spinner="Calculando simulação quantitativa...")
-def rodar_backtest_cached(d_ini, d_fim, lk, fq, fr, cst, modo):
+@st.cache_data(show_spinner="Calculando simulação quantitativa...", ttl=3600)
+def rodar_backtest_cached(
+    data_inicio: str,
+    data_fim: str,
+    lookback_dias: int,
+    frequencia_rebalanceamento: str,
+    fracao_quintil: float,
+    custo_transacao_bps: float,
+    modo_estrategia: str
+) -> dict:
+    """
+    Função de cache do Streamlit com parâmetros primitivos imutáveis para evitar erros de hash.
+    """
     return executar_backtest(
-        data_inicio=d_ini,
-        data_fim=d_fim,
-        lookback_dias=lk,
-        frequencia_rebalanceamento=fq,
-        fracao_quintil=fr,
-        custo_transacao_bps=cst,
-        modo_estrategia=modo
+        data_inicio=str(data_inicio),
+        data_fim=str(data_fim),
+        lookback_dias=int(lookback_dias),
+        frequencia_rebalanceamento=str(frequencia_rebalanceamento),
+        fracao_quintil=float(fracao_quintil),
+        custo_transacao_bps=float(custo_transacao_bps),
+        modo_estrategia=str(modo_estrategia)
     )
 
+# Formata strings de data de forma segura
+data_inicio_str = data_ini_input.strftime("%Y-%m-%d") if hasattr(data_ini_input, 'strftime') else str(data_ini_input)
+data_fim_str = data_fim_input.strftime("%Y-%m-%d") if hasattr(data_fim_input, 'strftime') else str(data_fim_input)
+
 res = rodar_backtest_cached(
-    str(data_ini_input),
-    str(data_fim_input),
-    lookback,
-    freq,
-    fracao,
-    custos,
-    modo_estrategia
+    data_inicio=data_inicio_str,
+    data_fim=data_fim_str,
+    lookback_dias=int(lookback),
+    frequencia_rebalanceamento=str(freq),
+    fracao_quintil=float(fracao),
+    custo_transacao_bps=float(custos),
+    modo_estrategia=str(modo_estrategia)
 )
+
 
 curvas = res['curvas_capital']
 metricas = res['metricas']

@@ -26,9 +26,14 @@ import requests
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from datetime import datetime
-from typing import List, Tuple, Optional
+from datetime import datetime, date
+from typing import List, Tuple, Optional, Union
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_COMPOSICAO_CSV = os.path.join(BASE_DIR, "data", "ibrx_composicao_historica.csv")
+DEFAULT_CACHE_PRECOS = os.path.join(BASE_DIR, "data", "cotacoes_cache.parquet")
+DEFAULT_CACHE_CDI = os.path.join(BASE_DIR, "data", "cdi_cache.csv")
+DEFAULT_CACHE_BENCH = os.path.join(BASE_DIR, "data", "benchmark_cache.csv")
 
 
 def formatar_ticker_b3(ticker: str) -> str:
@@ -36,13 +41,13 @@ def formatar_ticker_b3(ticker: str) -> str:
     Padroniza o ticker para a convenção do Yahoo Finance adicionando o sufixo '.SA'.
     Exemplo: 'PETR4' -> 'PETR4.SA', 'VALE3.SA' -> 'VALE3.SA'
     """
-    ticker_limpo = ticker.strip().upper()
+    ticker_limpo = str(ticker).strip().upper()
     if not ticker_limpo.endswith('.SA') and not ticker_limpo.startswith('^'):
         return f"{ticker_limpo}.SA"
     return ticker_limpo
 
 
-def carregar_composicao_ibrx(caminho_csv: str = "data/ibrx_composicao_historica.csv") -> pd.DataFrame:
+def carregar_composicao_ibrx(caminho_csv: Optional[str] = None) -> pd.DataFrame:
     """
     Carrega o arquivo histórico de composição do IBrX-100 por data de corte.
     
@@ -50,6 +55,14 @@ def carregar_composicao_ibrx(caminho_csv: str = "data/ibrx_composicao_historica.
     que de fato compunham o índice naquele trimestre, mitigando viés de sobrevivência
     (survivorship bias).
     """
+    if caminho_csv is None:
+        caminho_csv = DEFAULT_COMPOSICAO_CSV
+    elif not os.path.exists(caminho_csv):
+        # Tenta resolver relativo a BASE_DIR
+        alt_path = os.path.join(BASE_DIR, caminho_csv)
+        if os.path.exists(alt_path):
+            caminho_csv = alt_path
+            
     if not os.path.exists(caminho_csv):
         raise FileNotFoundError(
             f"❌ Arquivo de composição histórica não encontrado em '{caminho_csv}'. "
@@ -60,6 +73,7 @@ def carregar_composicao_ibrx(caminho_csv: str = "data/ibrx_composicao_historica.
     df['data_rebalanceamento'] = pd.to_datetime(df['data_rebalanceamento'])
     df['ticker'] = df['ticker'].apply(formatar_ticker_b3)
     return df
+
 
 
 def obter_universo_valido(data_corte: pd.Timestamp, df_composicao: pd.DataFrame) -> List[str]:
@@ -80,9 +94,9 @@ def obter_universo_valido(data_corte: pd.Timestamp, df_composicao: pd.DataFrame)
 
 
 def baixar_cdi_bcb(
-    data_inicio: str = "2015-01-01",
-    data_fim: str = "2026-08-01",
-    caminho_cache: str = "data/cdi_cache.csv"
+    data_inicio: Union[str, datetime, date] = "2015-01-01",
+    data_fim: Union[str, datetime, date] = "2026-08-01",
+    caminho_cache: Optional[str] = None
 ) -> pd.Series:
     """
     Baixa a série histórica da taxa CDI diária diretamente da API do SGS (Sistema Gerenciador de Séries Temporais)
@@ -91,7 +105,13 @@ def baixar_cdi_bcb(
     Implementa cache local e download em blocos temporais para máxima robustez e performance.
     Retorna uma pd.Series de retornos decimais diários (ex.: 0.04% a.d. -> 0.0004).
     """
+    if caminho_cache is None:
+        caminho_cache = DEFAULT_CACHE_CDI
+    elif not os.path.isabs(caminho_cache):
+        caminho_cache = os.path.join(BASE_DIR, caminho_cache)
+        
     os.makedirs(os.path.dirname(caminho_cache), exist_ok=True)
+
     
     # 1. Verifica cache local
     if os.path.exists(caminho_cache):
@@ -172,9 +192,9 @@ def baixar_cdi_bcb(
 
 def baixar_cotacoes_ativos(
     tickers: List[str],
-    data_inicio: str = "2015-01-01",
-    data_fim: str = "2026-08-01",
-    caminho_cache: str = "data/cotacoes_cache.parquet",
+    data_inicio: Union[str, datetime, date] = "2015-01-01",
+    data_fim: Union[str, datetime, date] = "2026-08-01",
+    caminho_cache: Optional[str] = None,
     forcar_download: bool = False
 ) -> pd.DataFrame:
     """
@@ -186,8 +206,16 @@ def baixar_cotacoes_ativos(
     - Suporte a cache incremental / completo.
     - Tratamento de colunas MultiIndex e limpeza de dados nulos.
     """
+    if caminho_cache is None:
+        caminho_cache = DEFAULT_CACHE_PRECOS
+    elif not os.path.isabs(caminho_cache):
+        caminho_cache = os.path.join(BASE_DIR, caminho_cache)
+        
     os.makedirs(os.path.dirname(caminho_cache), exist_ok=True)
     tickers_formatados = sorted(list(set([formatar_ticker_b3(t) for t in tickers])))
+    
+    d_ini_str = data_inicio.strftime("%Y-%m-%d") if hasattr(data_inicio, 'strftime') else str(data_inicio)
+    d_fim_str = data_fim.strftime("%Y-%m-%d") if hasattr(data_fim, 'strftime') else str(data_fim)
     
     # Checa existência de cache
     if os.path.exists(caminho_cache) and not forcar_download:
@@ -202,7 +230,7 @@ def baixar_cotacoes_ativos(
                 return df_cached
             else:
                 print(f"ℹ️ Cache contém {len(colunas_presentes)} ativos. Baixando {len(tickers_faltantes)} ativos complementares...")
-                df_novos = _download_yfinance_batch(tickers_faltantes, data_inicio, data_fim)
+                df_novos = _download_yfinance_batch(tickers_faltantes, d_ini_str, d_fim_str)
                 df_combinado = pd.concat([df_cached, df_novos], axis=1)
                 df_combinado = df_combinado.loc[:, ~df_combinado.columns.duplicated()]
                 df_combinado.sort_index(inplace=True)
@@ -211,8 +239,8 @@ def baixar_cotacoes_ativos(
         except Exception as e:
             print(f"⚠️ Erro ao ler cache Parquet ({e}). Baixando base completa do Yahoo Finance...")
 
-    print(f"🚀 Baixando cotações ajustadas de {len(tickers_formatados)} ativos do Yahoo Finance ({data_inicio} até {data_fim})...")
-    df_precos = _download_yfinance_batch(tickers_formatados, data_inicio, data_fim)
+    print(f"🚀 Baixando cotações ajustadas de {len(tickers_formatados)} ativos do Yahoo Finance ({d_ini_str} até {d_fim_str})...")
+    df_precos = _download_yfinance_batch(tickers_formatados, d_ini_str, d_fim_str)
     
     # Salva no cache
     df_precos.to_parquet(caminho_cache)
@@ -279,14 +307,22 @@ def _download_yfinance_batch(
 
 def baixar_benchmark(
     ticker: str = "^BVSP",
-    data_inicio: str = "2015-01-01",
-    data_fim: str = "2026-08-01",
-    caminho_cache: str = "data/benchmark_cache.csv"
+    data_inicio: Union[str, datetime, date] = "2015-01-01",
+    data_fim: Union[str, datetime, date] = "2026-08-01",
+    caminho_cache: Optional[str] = None
 ) -> pd.Series:
     """
     Baixa a série de preços do benchmark de mercado (Ibovespa / IBrX proxy).
     """
+    if caminho_cache is None:
+        caminho_cache = DEFAULT_CACHE_BENCH
+    elif not os.path.isabs(caminho_cache):
+        caminho_cache = os.path.join(BASE_DIR, caminho_cache)
+        
     os.makedirs(os.path.dirname(caminho_cache), exist_ok=True)
+    
+    d_ini_str = data_inicio.strftime("%Y-%m-%d") if hasattr(data_inicio, 'strftime') else str(data_inicio)
+    d_fim_str = data_fim.strftime("%Y-%m-%d") if hasattr(data_fim, 'strftime') else str(data_fim)
     
     if os.path.exists(caminho_cache):
         try:
@@ -298,7 +334,7 @@ def baixar_benchmark(
             pass
 
     print(f"📊 Baixando série histórica do Benchmark ({ticker}) do Yahoo Finance...")
-    dados = yf.download(ticker, start=data_inicio, end=data_fim, auto_adjust=True, progress=False, threads=False)
+    dados = yf.download(ticker, start=d_ini_str, end=d_fim_str, auto_adjust=True, progress=False, threads=False)
     if isinstance(dados.columns, pd.MultiIndex):
         serie = dados['Close'].iloc[:, 0]
     else:
@@ -308,6 +344,7 @@ def baixar_benchmark(
     df_save = serie.to_frame()
     df_save.to_csv(caminho_cache)
     return serie
+
 
 
 def calcular_retornos_diarios(precos_df: pd.DataFrame) -> pd.DataFrame:

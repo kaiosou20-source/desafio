@@ -4,10 +4,14 @@ DASHBOARD INTERATIVO QUANTITATIVO (dashboard.py)
 Projeto: Desafio Quant AI 2026 - Anomalia de Baixa Volatilidade (Low Volatility Anomaly)
 Mascote: Jonathan, o Robô-Tartaruga Quant (Q1) vs. A Lebre (Q5)
 ===============================================================================
-
 Aplicação Streamlit com tema escuro personalizado (#1F3B2C, #B08D4C, #D9D9D9):
 - Header com o Mascote Oficial Jonathan e storytelling do Desafio Quant AI 2026.
-- Controles interativos na barra lateral (lookback, rebalanceamento, custos, datas).
+- Controles interativos na barra lateral:
+  * Modo de Estratégia (Long-Only vs. Long-Short)
+  * Janela de Volatilidade / Lookback (6 meses / 126 pregões vs. 12 meses / 252 pregões)
+  * Frequência, tamanho do quintil, custos e datas.
+- Tabela executiva de métricas comparativas completas (Estratégia vs. IBrX-100 vs. CDI).
+- Tabela com as Top 10 posições atuais com pesos e volatilidades.
 - Cards com KPIs comparativos de performance e risco.
 - Gráficos interativos em Plotly (Curva de Capital, Drawdown, Quintis, Heatmap).
 - Composição detalhada da carteira e botão de exportação em CSV.
@@ -128,7 +132,6 @@ st.markdown(f"""
 # BARRA LATERAL (CONTROLES E PARÂMETROS)
 # ==============================================================================
 with st.sidebar:
-    # Mascote na barra lateral se existir
     if os.path.exists("assets/jonathan.png"):
         st.image("assets/jonathan.png", use_container_width=True)
     elif os.path.exists("assets/jonathan_brand.png"):
@@ -137,15 +140,43 @@ with st.sidebar:
     st.markdown("<div class='badge-quant'>DESAFIO QUANT AI 2026</div>", unsafe_allow_html=True)
     st.markdown("### ⚙️ Parâmetros do Modelo")
     
+    # 1. Seletor de Modo de Estratégia
+    modo_dict = {
+        "Long-Only (Apenas Comprado em Low Vol)": "long_only",
+        "Long-Short (Comprado em Low Vol / Vendido em High Vol)": "long_short"
+    }
+    modo_selecionado = st.selectbox(
+        "Modo de Estratégia",
+        options=list(modo_dict.keys()),
+        index=0,
+        help="Long-Only compra os 20% com menor volatilidade (Q1). Long-Short compra Q1 e vende Q5 (High Vol), remunerando o caixa a 100% do CDI."
+    )
+    modo_estrategia = modo_dict[modo_selecionado]
+    
+    # 2. Seletor de Janela de Volatilidade (Lookback)
+    lookback_opcoes = {
+        "12 meses (252 dias úteis)": 252,
+        "6 meses (126 dias úteis)": 126,
+        "Personalizado": None
+    }
+    lookback_escolhido_label = st.selectbox(
+        "Janela de Volatilidade (Lookback)",
+        options=list(lookback_opcoes.keys()),
+        index=0,
+        help="Janela móvel histórica utilizada para calcular a volatilidade anualizada dos ativos."
+    )
+    
+    if lookback_opcoes[lookback_escolhido_label] is not None:
+        lookback = lookback_opcoes[lookback_escolhido_label]
+    else:
+        lookback = st.slider("Lookback Personalizado (Pregões)", min_value=63, max_value=504, value=252, step=21)
+    
     col_dt1, col_dt2 = st.columns(2)
     with col_dt1:
         data_ini_input = st.date_input("Início", value=pd.to_datetime("2018-01-01"))
     with col_dt2:
         data_fim_input = st.date_input("Fim", value=pd.to_datetime("2026-08-01"))
         
-    lookback = st.slider("Lookback Volatilidade (Pregões)", min_value=63, max_value=504, value=252, step=21,
-                         help="Janela móvel de cálculo do desvio-padrão (252 pregões = 12 meses).")
-    
     freq = st.selectbox("Frequência de Rebalanceamento", options=["trimestral", "mensal", "semestral", "anual"], index=0,
                         help="Rebalanceamento sistemático com dados fechados no último pregão do ciclo.")
     
@@ -168,14 +199,15 @@ with st.sidebar:
 # EXECUÇÃO DO BACKTEST (COM CACHE STREAMLIT)
 # ==============================================================================
 @st.cache_data(show_spinner="Calculando simulação quantitativa...")
-def rodar_backtest_cached(d_ini, d_fim, lk, fq, fr, cst):
+def rodar_backtest_cached(d_ini, d_fim, lk, fq, fr, cst, modo):
     return executar_backtest(
         data_inicio=d_ini,
         data_fim=d_fim,
         lookback_dias=lk,
         frequencia_rebalanceamento=fq,
         fracao_quintil=fr,
-        custo_transacao_bps=cst
+        custo_transacao_bps=cst,
+        modo_estrategia=modo
     )
 
 res = rodar_backtest_cached(
@@ -184,11 +216,13 @@ res = rodar_backtest_cached(
     lookback,
     freq,
     fracao,
-    custos
+    custos,
+    modo_estrategia
 )
 
 curvas = res['curvas_capital']
 metricas = res['metricas']
+metricas_comp = res['metricas_comparativas']
 ret_diarios = res['retornos_diarios']
 ret_mensais_j = res['retornos_mensais_jonathan']
 ultimo_reb = res['ultimo_rebalanceamento']
@@ -207,12 +241,31 @@ with col_masc:
 
 with col_title:
     st.markdown("<div class='badge-quant'>ANOMALIA DE BAIXA VOLATILIDADE (LOW VOLATILITY ANOMALY)</div>", unsafe_allow_html=True)
-    st.title("🐢 Jonathan (Low Vol) vs. 🐇 A Lebre (High Vol)")
+    modo_txt = "Long-Short (Comprado em Low Vol / Vendido em High Vol)" if modo_estrategia == "long_short" else "Long-Only (Apenas Comprado em Low Vol)"
+    st.title(f"🐢 Jonathan ({modo_txt}) vs. 🐇 A Lebre")
     st.markdown("""
     **Metáfora Central:** *Jonathan, a tartaruga de quase dois séculos, sobreviveu a guerras e crises não por ser veloz, mas por nunca correr riscos desnecessários.
     No mercado acionário brasileiro (IBrX-100), o controle estrito de drawdowns e a consistência superam a volatilidade e compõem capital superior no longo prazo.*
     """)
 
+st.markdown("---")
+
+# ==============================================================================
+# QUADRO COMPARATIVO DE MÉTRICAS COMPLETAS (ESTRATÉGIA VS. IBRX-100 VS. CDI)
+# ==============================================================================
+st.markdown("### 📊 Métricas Comparativas Completas (Estratégia vs. IBrX-100 vs. CDI)")
+
+st.dataframe(
+    metricas_comp.style.format({
+        'Retorno Total': '{:.2f}%',
+        'Retorno Anualizado (CAGR)': '{:.2f}% a.a.',
+        'Volatilidade Anualizada': '{:.2f}% a.a.',
+        'Índice de Sharpe': '{:.2f}',
+        'Alpha Anualizado': '{:+.2f}% a.a.',
+        'Maximum Drawdown (MDD)': '{:.2f}%'
+    }),
+    use_container_width=True
+)
 
 st.markdown("---")
 
@@ -223,11 +276,10 @@ st.markdown("### 🏆 Confronto Direto de Performance e Risco")
 
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 
-# Extrai métricas
-m_j = metricas.loc['🐢 Q1 - Jonathan (Low Vol)']
-m_l = metricas.loc['🐇 Q5 - A Lebre (High Vol)']
-m_b = metricas.loc['📊 Benchmark (Ibovespa)']
-m_cdi = metricas.loc['💵 Taxa Livre de Risco (CDI)']
+m_j = metricas.loc['Estrategia_Ativa'] if 'Estrategia_Ativa' in metricas.index else metricas.iloc[0]
+m_l = metricas.loc['Q5_Lebre'] if 'Q5_Lebre' in metricas.index else metricas.iloc[4]
+m_b = metricas.loc['Benchmark'] if 'Benchmark' in metricas.index else metricas.iloc[-2]
+m_cdi = metricas.loc['CDI'] if 'CDI' in metricas.index else metricas.iloc[-1]
 
 with c1:
     st.markdown(f"""
@@ -285,6 +337,54 @@ with c6:
 
 
 # ==============================================================================
+# TABELA DE POSIÇÕES ATUAIS (TOP 10 AÇÕES SELECIONADAS)
+# ==============================================================================
+st.markdown("---")
+st.markdown("### 🧩 Tabela de Posições Atuais (Top 10 Ações da Carteira)")
+
+if ultimo_reb:
+    d_reb_str = pd.to_datetime(ultimo_reb['data_rebalanceamento']).strftime('%d/%m/%Y')
+    df_q1_ativos = ultimo_reb['detalhes_quintis']['Q1_Jonathan']['df_ativos'].copy()
+    df_q1_ativos['Volatilidade (%)'] = df_q1_ativos['Volatilidade_Anualizada'] * 100.0
+    df_q1_ativos['Peso (%)'] = df_q1_ativos['Peso'] * 100.0
+    
+    # Ordena por menor volatilidade e pega o Top 10
+    top10_acoes = df_q1_ativos.sort_values('Volatilidade (%)').head(10).copy()
+    top10_acoes['Ranking'] = range(1, len(top10_acoes) + 1)
+    
+    st.caption(f"📅 **Data do Rebalanceamento Mais Recente:** {d_reb_str} | **Janela de Cálculo:** {lookback} pregões")
+    
+    col_pos_table, col_pos_chart = st.columns([1.4, 1.0])
+    
+    with col_pos_table:
+        st.dataframe(
+            top10_acoes[['Ranking', 'Ticker', 'Volatilidade (%)', 'Beta', 'Peso (%)']].set_index('Ranking').style.format({
+                'Volatilidade (%)': '{:.2f}%',
+                'Beta': '{:.2f}',
+                'Peso (%)': '{:.2f}%'
+            }),
+            use_container_width=True
+        )
+        
+    with col_pos_chart:
+        fig_bar_top10 = px.bar(
+            top10_acoes.sort_values('Volatilidade (%)', ascending=True),
+            x='Volatilidade (%)', y='Ticker', orientation='h',
+            color_discrete_sequence=[C_GOLD],
+            text=top10_acoes.sort_values('Volatilidade (%)', ascending=True)['Volatilidade (%)'].apply(lambda v: f"{v:.1f}%"),
+            title="Volatilidade Anualizada das Top 10 Ações"
+        )
+        fig_bar_top10.update_layout(
+            template="plotly_dark", paper_bgcolor=C_BG, plot_bgcolor=C_CARD,
+            height=350, margin=dict(l=20, r=20, t=35, b=20),
+            xaxis=dict(title="Vol Anual (%)", gridcolor="#2A4E3B", ticksuffix="%"),
+            yaxis=dict(title="")
+        )
+        st.plotly_chart(fig_bar_top10, use_container_width=True)
+
+st.markdown("---")
+
+# ==============================================================================
 # ABAS INTERATIVAS DE VISUALIZAÇÃO
 # ==============================================================================
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
@@ -292,8 +392,8 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "🌊 Drawdown Subaquático",
     "📊 Análise dos 5 Quintis",
     "🗓️ Heatmap Mensal",
-    "🧩 Carteira Atual",
-    "📜 Rebalanceamentos & Exportação"
+    "🧩 Carteira Completa",
+    "📜 Histórico & Exportação CSV"
 ])
 
 # ------------------------------------------------------------------------------
@@ -308,18 +408,20 @@ with tab1:
         
     fig_curva = go.Figure()
     
+    nome_est_plot = "🐢 Estratégia (Long-Short Low/High Vol)" if modo_estrategia == "long_short" else "🐢 Estratégia Jonathan (Low Vol)"
+    
     fig_curva.add_trace(go.Scatter(
-        x=curvas.index, y=curvas['Q1_Jonathan'],
-        name='🐢 Q1 - Jonathan (Low Vol)',
+        x=curvas.index, y=curvas['Estrategia_Ativa'],
+        name=nome_est_plot,
         line=dict(color=C_GOLD, width=3.2),
-        hovertemplate='<b>🐢 Jonathan</b>: R$ %{y:,.2f}<extra></extra>'
+        hovertemplate='<b>🐢 Estratégia</b>: R$ %{y:,.2f}<extra></extra>'
     ))
     
     fig_curva.add_trace(go.Scatter(
         x=curvas.index, y=curvas['Benchmark'],
-        name='📊 Benchmark (Ibovespa)',
+        name='📊 Benchmark (Ibovespa / IBrX)',
         line=dict(color=C_GRAY, width=2.0, dash='dash'),
-        hovertemplate='<b>📊 Ibovespa</b>: R$ %{y:,.2f}<extra></extra>'
+        hovertemplate='<b>📊 Benchmark</b>: R$ %{y:,.2f}<extra></extra>'
     ))
     
     fig_curva.add_trace(go.Scatter(
@@ -365,7 +467,7 @@ with tab1:
 with tab2:
     st.markdown("#### Rebaixamento a partir da Máxima Histórica (Drawdown Subaquático)")
     
-    dd_j = (curvas['Q1_Jonathan'] / curvas['Q1_Jonathan'].cummax() - 1.0) * 100.0
+    dd_j = (curvas['Estrategia_Ativa'] / curvas['Estrategia_Ativa'].cummax() - 1.0) * 100.0
     dd_l = (curvas['Q5_Lebre'] / curvas['Q5_Lebre'].cummax() - 1.0) * 100.0
     dd_b = (curvas['Benchmark'] / curvas['Benchmark'].cummax() - 1.0) * 100.0
     
@@ -382,7 +484,7 @@ with tab2:
     
     fig_dd.add_trace(go.Scatter(
         x=curvas.index, y=dd_b,
-        name='📊 Ibovespa',
+        name='📊 Benchmark (Ibovespa)',
         fill='tozeroy',
         fillcolor='rgba(217, 217, 217, 0.15)',
         line=dict(color=C_GRAY, width=1.5, dash='dash'),
@@ -391,11 +493,11 @@ with tab2:
     
     fig_dd.add_trace(go.Scatter(
         x=curvas.index, y=dd_j,
-        name='🐢 Jonathan (Low Vol)',
+        name='🐢 Estratégia Jonathan',
         fill='tozeroy',
         fillcolor='rgba(176, 141, 76, 0.45)',
         line=dict(color=C_GOLD, width=2.5),
-        hovertemplate='<b>🐢 Jonathan DD</b>: %{y:.2f}%<extra></extra>'
+        hovertemplate='<b>🐢 Estratégia DD</b>: %{y:.2f}%<extra></extra>'
     ))
     
     fig_dd.update_layout(
@@ -494,7 +596,7 @@ with tab3:
 # TAB 4: HEATMAP MENSAL
 # ------------------------------------------------------------------------------
 with tab4:
-    st.markdown("#### Matriz de Retornos Mensais e Anuais — 🐢 Jonathan (Low Vol)")
+    st.markdown("#### Matriz de Retornos Mensais e Anuais — 🐢 Estratégia Ativa")
     
     st.dataframe(
         ret_mensais_j.style.background_gradient(
@@ -506,13 +608,13 @@ with tab4:
     )
 
 # ------------------------------------------------------------------------------
-# TAB 5: CARTEIRA ATUAL
+# TAB 5: CARTEIRA COMPLETA
 # ------------------------------------------------------------------------------
 with tab5:
     st.markdown("#### Ativos Selecionados no Último Rebalanceamento")
     if ultimo_reb:
         d_reb_str = pd.to_datetime(ultimo_reb['data_rebalanceamento']).strftime('%d/%m/%Y')
-        st.info(f"📅 **Data de Rebalanceamento:** {d_reb_str} | **Lookback:** {lookback} pregões")
+        st.info(f"📅 **Data de Rebalanceamento:** {d_reb_str} | **Lookback:** {lookback} pregões | **Modo:** {modo_txt}")
         
         df_q1_ativos = ultimo_reb['detalhes_quintis']['Q1_Jonathan']['df_ativos'].copy()
         df_q1_ativos['Volatilidade (%)'] = df_q1_ativos['Volatilidade_Anualizada'] * 100.0
@@ -521,6 +623,7 @@ with tab5:
         col_t_left, col_t_right = st.columns([1.5, 1])
         
         with col_t_left:
+            st.markdown("##### 🟢 Cesta Comprada (Q1 - Low Volatility)")
             st.dataframe(
                 df_q1_ativos[['Ticker', 'Volatilidade (%)', 'Beta', 'Peso (%)']].style.format({
                     'Volatilidade (%)': '{:.2f}%',
@@ -535,7 +638,7 @@ with tab5:
                 df_q1_ativos.sort_values('Volatilidade (%)'),
                 x='Volatilidade (%)', y='Ticker', orientation='h',
                 color_discrete_sequence=[C_GOLD],
-                title="Volatilidade Individual dos Ativos"
+                title="Volatilidade Individual dos Ativos (Q1)"
             )
             fig_bar_ativos.update_layout(
                 template="plotly_dark", paper_bgcolor=C_BG, plot_bgcolor=C_CARD,
@@ -546,10 +649,10 @@ with tab5:
             st.plotly_chart(fig_bar_ativos, use_container_width=True)
 
 # ------------------------------------------------------------------------------
-# TAB 6: HISTÓRICO DE REBALANCEAMENTOS & EXPORTAÇÃO CSV
+# TAB 6: HISTÓRICO & EXPORTAÇÃO CSV
 # ------------------------------------------------------------------------------
 with tab6:
-    st.markdown("#### Tabela Comparativa de Métricas & Exportação")
+    st.markdown("#### Tabela Completa de Métricas & Exportação")
     
     st.dataframe(metricas.style.format({
         'Retorno Total (%)': '{:.2f}%',
@@ -568,7 +671,6 @@ with tab6:
     st.markdown("---")
     st.markdown("#### 📥 Exportar Resultados Diários do Backtest")
     
-    # Prepara CSV combinado para download
     df_export = pd.concat([
         curvas.add_prefix("Curva_Capital_"),
         ret_diarios.add_prefix("Retorno_Diario_")

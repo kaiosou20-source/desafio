@@ -54,6 +54,7 @@ def executar_backtest(
     frequencia_rebalanceamento: str = "trimestral",
     fracao_quintil: float = 0.20,
     custo_transacao_bps: float = 5.0,
+    modo_estrategia: str = "long_only",
     caminho_composicao: str = "data/ibrx_composicao_historica.csv"
 ) -> Dict:
     """
@@ -62,20 +63,23 @@ def executar_backtest(
     Parâmetros:
         data_inicio: Data inicial da simulação (YYYY-MM-DD).
         data_fim: Data final da simulação (YYYY-MM-DD).
-        lookback_dias: Janela móvel de cálculo de volatilidade (padrão = 252 pregões).
+        lookback_dias: Janela móvel de cálculo de volatilidade (126 = 6 meses, 252 = 12 meses).
         frequencia_rebalanceamento: 'trimestral', 'mensal', 'semestral' ou 'anual'.
         fracao_quintil: Proporção de cada quintil (0.20 = 20%).
         custo_transacao_bps: Custo de corretagem/slippage em bps (5 bps = 0.05% por giro).
+        modo_estrategia: 'long_only' (apenas Q1 Low Vol) ou 'long_short' (Long Q1 Low Vol / Short Q5 High Vol + CDI).
         caminho_composicao: Caminho para o CSV de composição histórica do IBrX-100.
         
     Retorna:
         Dict com curvas de capital, retornos diários, métricas comparativas e histórico de rebalanceamentos.
     """
+    modo_label = "Long-Short (Q1 Long / Q5 Short + CDI)" if modo_estrategia == "long_short" else "Long-Only (Q1 Low Vol)"
     print("=" * 80)
-    print(f"🐢 MOTOR DE BACKTEST QUANTITATIVO: JONATHAN (LOW VOL) VS. A LEBRE (HIGH VOL)")
+    print(f"🐢 MOTOR DE BACKTEST QUANTITATIVO: JONATHAN ({modo_label})")
     print(f"   Período: {data_inicio} até {data_fim} | Lookback: {lookback_dias} pregões")
     print(f"   Rebalanceamento: {frequencia_rebalanceamento.capitalize()} | Custos: {custo_transacao_bps} bps")
     print("=" * 80)
+
 
     # 1. Carrega Universo Histórico
     df_composicao = carregar_composicao_ibrx(caminho_composicao)
@@ -215,21 +219,35 @@ def executar_backtest(
     # 7. Limpeza e Construção das Curvas de Capital (Base 100)
     df_retornos_validos = df_retornos_sim.dropna(subset=['Q1_Jonathan', 'Q5_Lebre']).copy()
     
+    # Define a série de retorno da estratégia ativa
+    if modo_estrategia == "long_short":
+        # Long Q1 (Low Vol) / Short Q5 (High Vol) + Colateral remunerado a CDI
+        df_retornos_validos['Estrategia_Ativa'] = (
+            df_retornos_validos['Q1_Jonathan'] - df_retornos_validos['Q5_Lebre']
+        ) + df_retornos_validos['CDI']
+    else:
+        # Long-Only (Q1 Low Vol)
+        df_retornos_validos['Estrategia_Ativa'] = df_retornos_validos['Q1_Jonathan']
+        
     df_curvas_capital = pd.DataFrame(index=df_retornos_validos.index)
     for col in df_retornos_validos.columns:
         df_curvas_capital[col] = 100.0 * (1.0 + df_retornos_validos[col]).cumprod()
         
     # 8. Cálculo Completo de Métricas de Performance e Risco
-    tabela_metricas = calcular_quadro_metricas(df_retornos_validos, df_curvas_capital)
+    tabela_metricas = calcular_quadro_metricas(df_retornos_validos, df_curvas_capital, modo_estrategia=modo_estrategia)
     
-    # 9. Retornos Mensais e Anuais para o Heatmap do Jonathan
-    tabela_mensal_jonathan = gerar_tabela_retornos_mensais(df_retornos_validos['Q1_Jonathan'])
+    # 9. Quadro Comparativo Resumido (Estratégia vs. IBrX-100 vs. CDI)
+    tabela_comparativa_resumida = obter_quadro_comparativo_resumido(tabela_metricas, modo_estrategia=modo_estrategia)
+    
+    # 10. Retornos Mensais e Anuais para o Heatmap
+    tabela_mensal_estrategia = gerar_tabela_retornos_mensais(df_retornos_validos['Estrategia_Ativa'])
 
     resultado_final = {
         'curvas_capital': df_curvas_capital,
         'retornos_diarios': df_retornos_validos,
         'metricas': tabela_metricas,
-        'retornos_mensais_jonathan': tabela_mensal_jonathan,
+        'metricas_comparativas': tabela_comparativa_resumida,
+        'retornos_mensais_jonathan': tabela_mensal_estrategia,
         'historico_rebalanceamentos': historico_rebalanceamentos,
         'ultimo_rebalanceamento': historico_rebalanceamentos[-1] if historico_rebalanceamentos else None,
         'parametros': {
@@ -238,16 +256,68 @@ def executar_backtest(
             'lookback_dias': lookback_dias,
             'frequencia': frequencia_rebalanceamento,
             'fracao_quintil': fracao_quintil,
-            'custo_bps': custo_transacao_bps
+            'custo_bps': custo_transacao_bps,
+            'modo_estrategia': modo_estrategia
         }
     }
     
     return resultado_final
 
 
+def obter_quadro_comparativo_resumido(df_metricas: pd.DataFrame, modo_estrategia: str = "long_only") -> pd.DataFrame:
+    """
+    Retorna o quadro comparativo executivo de 6 métricas essenciais:
+    (Estratégia vs. IBrX-100 / Ibovespa vs. CDI)
+    - Retorno Total (%)
+    - Retorno Anualizado (CAGR)
+    - Volatilidade Anualizada
+    - Índice de Sharpe (vs. CDI)
+    - Alpha Anualizado (%)
+    - Maximum Drawdown (MDD %)
+    """
+    nome_est = "🐢 Estratégia (Long-Short Low/High Vol)" if modo_estrategia == "long_short" else "🐢 Estratégia (Low Vol Long-Only)"
+    
+    mapa_linhas = {
+        'Estrategia_Ativa': nome_est,
+        'Benchmark': '📊 IBrX-100 / Ibovespa',
+        'CDI': '💵 CDI (Taxa Livre de Risco)'
+    }
+    
+    cols_desejadas = [
+        'Retorno Total (%)',
+        'CAGR (% a.a.)',
+        'Volatilidade (% a.a.)',
+        'Índice Sharpe (vs CDI)',
+        'Alpha Anualizado (%)',
+        'Max Drawdown (%)'
+    ]
+    
+    linhas = []
+    nomes_index = []
+    
+    for chave_orig, nome_exib in mapa_linhas.items():
+        if chave_orig in df_metricas.index:
+            row = df_metricas.loc[chave_orig, cols_desejadas].copy()
+            linhas.append(row)
+            nomes_index.append(nome_exib)
+            
+    df_res = pd.DataFrame(linhas, index=nomes_index)
+    df_res.columns = [
+        'Retorno Total',
+        'Retorno Anualizado (CAGR)',
+        'Volatilidade Anualizada',
+        'Índice de Sharpe',
+        'Alpha Anualizado',
+        'Maximum Drawdown (MDD)'
+    ]
+    return df_res
+
+
+
 def calcular_quadro_metricas(
     df_retornos: pd.DataFrame,
-    df_curvas: pd.DataFrame
+    df_curvas: pd.DataFrame,
+    modo_estrategia: str = "long_only"
 ) -> pd.DataFrame:
     """
     Computa um quadro rigoroso e completo de métricas quantitativas de desempenho e risco.
@@ -322,7 +392,6 @@ def calcular_quadro_metricas(
         alpha_jensen = ((cagr_dec - cagr_cdi) - beta * (cagr_bench - cagr_cdi)) * 100.0
         
         # 11. Win Rate vs. Benchmark (por trimestre móvel de 63 pregões)
-        # Comparação da proporção de janelas trimestrais com retorno superior ao Benchmark
         janela_trim = 63
         if len(serie_ret) >= janela_trim:
             roll_strat = serie_curva.pct_change(janela_trim).dropna()
@@ -347,16 +416,8 @@ def calcular_quadro_metricas(
         }
         
     df_metricas = pd.DataFrame(metricas).T
-    # Renomeia linhas para exibição mais rica
-    df_metricas.index = [
-        '🐢 Q1 - Jonathan (Low Vol)' if idx == 'Q1_Jonathan'
-        else '🐇 Q5 - A Lebre (High Vol)' if idx == 'Q5_Lebre'
-        else '📊 Benchmark (Ibovespa)' if idx == 'Benchmark'
-        else '💵 Taxa Livre de Risco (CDI)' if idx == 'CDI'
-        else idx
-        for idx in df_metricas.index
-    ]
     return df_metricas
+
 
 
 def gerar_tabela_retornos_mensais(retornos_diarios_serie: pd.Series) -> pd.DataFrame:

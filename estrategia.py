@@ -69,42 +69,35 @@ def calcular_beta_anualizado(
     min_periodos: Optional[int] = None
 ) -> pd.Series:
     """
-    Calcula o Beta empírico de cada ativo em relação ao benchmark de mercado:
+    Calcula o Beta empírico de cada ativo em relação ao benchmark de mercado via NumPy BLAS:
         Beta_i = Cov(R_i, R_m) / Var(R_m)
-    
-    Parâmetros:
-        retornos_ativos: DataFrame de retornos diários dos ativos.
-        retornos_benchmark: Series com retornos diários do índice de mercado.
-        lookback: Janela móvel de cálculo.
-        min_periodos: Mínimo de pares de retornos válidos (padrão = 70% da janela).
     """
-    if min_periodos is None:
-        min_periodos = max(10, int(lookback * 0.70))
-        
-    # Alinhamento temporal
-    dados_combinados = pd.concat([retornos_benchmark.rename("BENCHMARK"), retornos_ativos], axis=1).iloc[-lookback:]
-    dados_combinados.dropna(subset=["BENCHMARK"], inplace=True)
-    
-    var_mercado = dados_combinados["BENCHMARK"].var(ddof=1)
-    if np.isnan(var_mercado) or var_mercado == 0:
+    if retornos_ativos.empty or retornos_benchmark.empty:
         return pd.Series(index=retornos_ativos.columns, data=1.0)
         
-    betas = {}
-    for col in retornos_ativos.columns:
-        if col in dados_combinados.columns:
-            par = dados_combinados[["BENCHMARK", col]].dropna()
-            if len(par) >= min_periodos:
-                cov = par["BENCHMARK"].cov(par[col])
-                beta = cov / var_mercado
-                betas[col] = beta
-            elif len(par) >= 5:
-                # Estimativa de menor precisão em caso de histórico reduzido
-                cov = par["BENCHMARK"].cov(par[col])
-                betas[col] = cov / var_mercado if var_mercado > 0 else 1.0
-            else:
-                betas[col] = 1.0
-                
-    return pd.Series(betas).fillna(1.0)
+    b = retornos_benchmark.iloc[-lookback:].values
+    a = retornos_ativos.iloc[-lookback:].values
+    
+    mask_b = ~np.isnan(b)
+    if mask_b.sum() < 10:
+        return pd.Series(index=retornos_ativos.columns, data=1.0)
+        
+    var_m = np.nanvar(b, ddof=1)
+    if var_m <= 0 or np.isnan(var_m):
+        return pd.Series(index=retornos_ativos.columns, data=1.0)
+        
+    b_cent = b - np.nanmean(b)
+    b_cent = np.nan_to_num(b_cent, nan=0.0)
+    
+    a_mean = np.nanmean(a, axis=0, keepdims=True)
+    a_cent = a - a_mean
+    a_cent = np.nan_to_num(a_cent, nan=0.0)
+    
+    covs = np.dot(b_cent, a_cent) / max(1, len(b) - 1)
+    betas = covs / var_m
+    return pd.Series(betas, index=retornos_ativos.columns).fillna(1.0)
+
+
 
 
 def formar_carteiras_quintis(
